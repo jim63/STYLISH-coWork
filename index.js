@@ -1,3 +1,4 @@
+// MySQL Initialization
 let mysql=require("mysql");
 let con=mysql.createConnection({
 	host:"localhost",
@@ -11,8 +12,10 @@ con.connect(function(err){
 		console.log("Connected!");
 	}
 });
+// Express Initialization
 let express=require("express");
 let app=express();
+app.use(express.static("public"));
 app.listen(80, function(){
 	console.log("Server Started");
 });
