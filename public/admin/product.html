@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stylish Product Management</title>
+<style>
+body{
+	font-size:16px;
+	font-family:"Noto Sans TC", "微軟正黑體", "新細明體", arial, sans-serif;
+	color:#3f3a3a;line-height:2.5em;
+}
+textarea{
+	width:400px;height:100px;padding:5px;
+}
+input{
+	width:300px;padding:5px;
+}
+</style>
+<script>
+function createProduct(f){
+	let id=f.id.value;
+	let name=f.name.value;
+	let category=f.category.options[f.category.selectedIndex].value;
+	let price=f.price.value;
+	let colors=f.colors.value.split(",");
+	let sizes=f.sizes.value.split(",");
+	let summary=f.summary.value.replace(/\r\n/g,"<br/>").replace(/\n/g,"<br/>");
+	let story=f.story.value.replace(/\r\n/g,"<br/>").replace(/\n/g,"<br/>");
+	let now=(new Date()).getTime();
+	let data={
+		id:id, name:name, category:category,
+		price:price, summary:summary, story:story,
+		colors:f.colors.value, sizes:f.sizes.value,
+		update_time:now,
+		variants:{}
+	};
+	for(let i=0;i<sizes.length;i++){
+		for(let j=0;j<colors.length;j++){
+			data.variants[sizes[i]+"-"+colors[j]]={
+				size:sizes[i],
+				color:colors[j],
+				stock:Math.floor(Math.random()*10)
+			}
+		}
+	}
+}
+</script>
+</head>
+<body>
+	<h3>Create a New Product</h3>
+	<form method="post" action="/api/product" enctype="multipart/form-data">
+		Category <select name="category">
+			<option value="women">Women</option>
+			<option value="men">Men</option>
+			<option value="accessories">Accessories</option>
+		</select><br/>
+		Title <input type="text" name="title" /><br/>
+		Description<br/><textarea name="description"></textarea><br/>
+		Price <input type="text" name="price" />
+		<hr/>
+		Texture <input type="text" name="texture" /><br/>
+		Wash <input type="text" name="wash" /><br/>
+		Place of Production <input type="text" name="place" /><br/>
+		Note <input type="text" name="note" />
+		<hr/>
+		Colors <input type="text" name="colors" value="FFFFFF,DDFFBB,DDF0FF,AAAAAA,995522,334422,334455" /><br/>
+		Sizes <input type="text" name="sizes" value="S,M,L,XL,F" />
+		<hr/>
+		Story<br/><textarea name="story"></textarea><br/>
+		Main Image <input type="file" name="mainImage" /><br/>
+		Other Images <input type="file" name="otherImages" multiple /><br/>
+		<br/>
+		<input type="submit" value="Create" />
+	</form>
+</body>
+</html>
