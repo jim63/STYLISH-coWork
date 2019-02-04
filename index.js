@@ -4,7 +4,8 @@ let mysql=require("mysql");
 let mysqlCon=mysql.createConnection({
 	host:"localhost",
 	user:"root",
-	password:"123456"
+	password:"123456",
+	database:"stylish"
 });
 mysqlCon.connect(function(err){
 	if(err){
@@ -36,6 +37,7 @@ app.post("/api/product", function(req, res){
 					res.send({error:"Database Error"});
 				}else{
 					let productId=result.insertId;
+					fs.mkdirSync("./public/assets/"+productId);
 					fs.renameSync(req.files["mainImage"][0].path, "./public/assets/"+productId+"/main.jpg");
 					for(let i=0;i<req.files["otherImages"].length;i++){
 						fs.renameSync(req.files["otherImages"][i].path, "./public/assets/"+productId+"/"+i+".jpg");
