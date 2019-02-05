@@ -32,6 +32,61 @@ app.post("/api/product", function(req, res){
 		if(error){
 			res.send({error:"Upload Images Error"});
 		}else{
+			let colors=req.body.colors.split(",");
+			let sizes=req.body.sizes.split(",");
+			mysqlCon.beginTransaction(function(error){
+				if(error){throw error;}
+				let product={
+					category:req.body.category,
+					title:req.body.title,
+					description:req.body.description,
+					price:req.body.price,
+					texture:req.body.texture,
+					wash:req.body.wash,
+					place:req.body.place,
+					note:req.body.note,
+					story:req.body.story
+				};
+				mysqlCon.query("insert into product set ?", product, function(error, results, fields){
+					if(error){
+						console.log(error);
+						return mysqlCon.rollback(function(){
+							throw error;
+						});
+					}
+					let productId=results.insertId;
+					let variants=[];
+					for(let i=0;i<colors.length;i++){
+						for(let j=0;j<sizes.length;j++){
+							variants.push([
+								colors[i], sizes[j], Math.round(Math.random()*10), productId
+							]);
+						}
+					}
+					mysqlCon.query("insert into variant(color,size,stock,product_id) values ?", [variants], function(error, results, fields){
+						if(error){
+							console.log(error);
+							return mysqlCon.rollback(function(){
+								throw error;
+							});
+						}
+						mysqlCon.commit(function(error){
+							if(error){
+								return mysqlCon.rollback(function(){
+									throw error;
+								});
+							}
+							fs.mkdirSync("./public/assets/"+productId);
+							fs.renameSync(req.files["mainImage"][0].path, "./public/assets/"+productId+"/main.jpg");
+							for(let i=0;i<req.files["otherImages"].length;i++){
+								fs.renameSync(req.files["otherImages"][i].path, "./public/assets/"+productId+"/"+i+".jpg");
+							}
+							res.send({status:"ok"});
+						});
+					});					
+				});
+			});
+/*
 			mysqlCon.query("insert into product(title,description) values('"+req.body.title+"','"+req.body.description+"')", function(error, result){
 				if(error){
 					res.send({error:"Database Error"});
@@ -45,6 +100,7 @@ app.post("/api/product", function(req, res){
 					res.send({status:"ok"});
 				}
 			});
+*/
 		}
 	});
 });
