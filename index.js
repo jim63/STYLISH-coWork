@@ -83,7 +83,7 @@ app.post("/api/product", function(req, res){
 							for(let i=0;i<req.files["otherImages"].length;i++){
 								fs.renameSync(req.files["otherImages"][i].path, "./public/assets/"+productId+"/"+i+".jpg");
 							}
-							res.send({status:"ok"});
+							res.send({status:"OK"});
 						});
 					});					
 				});
@@ -93,16 +93,100 @@ app.post("/api/product", function(req, res){
 });
 // Product API
 app.get("/api/"+API_VERSION+"/products/:listName", function(req, res){
-	console.log(listName);
+	let paging=req.query.paging;
+	if(!paging || !Number.isInteger(paging)){
+		paging=0;
+	}
+	let size=6;
+	let listName=req.params.listName;
+	let result={error:"Wrong Request"};
+	let listCallback=function(data){
+		console.log(data);
+		res.send(data);
+	};
 	switch(listName){
 		case "hots":
 			break;
 		case "all":
+			listProducts(null, size, paging, listCallback);
 			break;
 		case "boys": case "girls": case "accessories":
+			listProducts(listName, size, paging, listCallback);
 			break;
 		case "search":
+			if(req.query.keyword){
+				searchProducts(req.query.keyword, size, paging, function(data){
+					console.log(data);
+				});
+			}else{
+				res.send({error:"Wrong Request"});
+			}
 			break;
 	}
 });
+	function listProducts(category, size, paging, callback){
+		let offset=paging*size;
+		let filter="";
+		if(category!==null){
+			filter=" where category='"+mysqlCon.escape(category)+"'";
+		}
+		let query="select count(*) as total from product";
+		mysqlCon.query(query+filter, function(error, results, fields){
+			let total=results[0].total;
+			let maxPage=Math.floor((total-1)/size);
+			let body={};
+			if(paging<maxPage){
+				body.paging=paging+1;
+			}
+			query="select * from product";
+			mysqlCon.query(query+filter+" limit ?,?", [offset,size], function(error, results, fields){
+				if(error){
+					callback({error:"Database Query Error"});
+				}else{
+					let products=results;
+					query="select * from variant where product_id in ("+products.map((product)=>{
+						return product.id;
+					}).join(",")+")";
+					mysqlCon.query(query, function(error, results, fields){
+						if(error){
+							callback({error:"Database Query Error"});
+						}else{
+							products.forEach((product)=>{
+								product.colors=[];
+								product.sizes=[];
+								product.stocks=[];
+							});
+							let product, variant;
+							for(let i=0;i<results.length;i++){
+								variant=results[i];
+								product=products.find((product)=>{
+									return product.id===variant.product_id;
+								});
+								if(product.colors.findIndex((color)=>{
+									return color.code===variant.color_code
+								})===-1){
+									product.colors.push({
+										code:variant.color_code, name:variant.color_name
+									});
+								}
+								if(product.sizes.indexOf(variant.size)===-1){
+									product.sizes.push(variant.size);
+								}
+								product.stocks.push({
+									colorCode:variant.color_code,
+									size:variant.size,
+									stock:variant.stock
+								});
+							}
+							body.data=products;
+							callback(body);
+						}
+					});
+				}
+			});
+		});
+	}
+	function searchProducts(keyword, size, paging, callback){
+		callback({});
+	}
 // git password: af7258ba52ea0bd3756239234f5f46812cc57510 
