@@ -1,3 +1,4 @@
+const API_VERSION="1.0";
 let fs=require("fs");
 // MySQL Initialization
 let mysql=require("mysql");
@@ -86,22 +87,21 @@ app.post("/api/product", function(req, res){
 					});					
 				});
 			});
-/*
-			mysqlCon.query("insert into product(title,description) values('"+req.body.title+"','"+req.body.description+"')", function(error, result){
-				if(error){
-					res.send({error:"Database Error"});
-				}else{
-					let productId=result.insertId;
-					fs.mkdirSync("./public/assets/"+productId);
-					fs.renameSync(req.files["mainImage"][0].path, "./public/assets/"+productId+"/main.jpg");
-					for(let i=0;i<req.files["otherImages"].length;i++){
-						fs.renameSync(req.files["otherImages"][i].path, "./public/assets/"+productId+"/"+i+".jpg");
-					}
-					res.send({status:"ok"});
-				}
-			});
-*/
 		}
 	});
+});
+// Product API
+app.get("/api/"+API_VERSION+"/products/:listName", function(req, res){
+	console.log(listName);
+	switch(listName){
+		case "hots":
+			break;
+		case "all":
+			break;
+		case "boys": case "girls": case "accessories":
+			break;
+		case "search":
+			break;
+	}
 });
 // git password: af7258ba52ea0bd3756239234f5f46812cc57510 
