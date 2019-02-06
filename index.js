@@ -33,7 +33,8 @@ app.post("/api/product", function(req, res){
 		if(error){
 			res.send({error:"Upload Images Error"});
 		}else{
-			let colors=req.body.colors.split(",");
+			let colorCodes=req.body.colorCodes.split(",");
+			let colorNames=req.body.colorNames.split(",");
 			let sizes=req.body.sizes.split(",");
 			mysqlCon.beginTransaction(function(error){
 				if(error){throw error;}
@@ -57,14 +58,14 @@ app.post("/api/product", function(req, res){
 					}
 					let productId=results.insertId;
 					let variants=[];
-					for(let i=0;i<colors.length;i++){
+					for(let i=0;i<colorCodes.length;i++){
 						for(let j=0;j<sizes.length;j++){
 							variants.push([
-								colors[i], sizes[j], Math.round(Math.random()*10), productId
+								colorCodes[i], colorNames[i], sizes[j], Math.round(Math.random()*10), productId
 							]);
 						}
 					}
-					mysqlCon.query("insert into variant(color,size,stock,product_id) values ?", [variants], function(error, results, fields){
+					mysqlCon.query("insert into variant(color_code,color_name,size,stock,product_id) values ?", [variants], function(error, results, fields){
 						if(error){
 							console.log(error);
 							return mysqlCon.rollback(function(){
