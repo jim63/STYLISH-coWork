@@ -16,6 +16,85 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `campaign`
+--
+
+DROP TABLE IF EXISTS `campaign`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `campaign` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `product_id` bigint(20) unsigned NOT NULL,
+  `picture` varchar(255) NOT NULL,
+  `story` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `product` (`product_id`),
+  CONSTRAINT `campaign_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `product` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `campaign`
+--
+
+LOCK TABLES `campaign` WRITE;
+/*!40000 ALTER TABLE `campaign` DISABLE KEYS */;
+INSERT INTO `campaign` VALUES (1,201807242228,'/assets/keyvisuals/201807242228.jpg','於是\r\n我也想要給你\r\n一個那麼美好的自己。\r\n不朽《與自己和好如初》'),(2,201807242222,'/assets/keyvisuals/201807242222.jpg','永遠\r\n展現自信與專業\r\n無法抵擋的男人魅力。\r\n復古《再一次經典》'),(3,201807202140,'/assets/keyvisuals/201807202140.jpg','瞬間\r\n在城市的角落\r\n找到失落多時的記憶。\r\n印象《都會故事集》');
+/*!40000 ALTER TABLE `campaign` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `hot`
+--
+
+DROP TABLE IF EXISTS `hot`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `hot` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `hot`
+--
+
+LOCK TABLES `hot` WRITE;
+/*!40000 ALTER TABLE `hot` DISABLE KEYS */;
+INSERT INTO `hot` VALUES (1,'冬季新品搶先看'),(2,'百搭穿搭必敗品');
+/*!40000 ALTER TABLE `hot` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `hot_product`
+--
+
+DROP TABLE IF EXISTS `hot_product`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `hot_product` (
+  `hot_id` bigint(20) unsigned NOT NULL,
+  `product_id` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`hot_id`,`product_id`),
+  KEY `product` (`product_id`),
+  CONSTRAINT `hot_product_ibfk_1` FOREIGN KEY (`hot_id`) REFERENCES `hot` (`id`),
+  CONSTRAINT `hot_product_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `product` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `hot_product`
+--
+
+LOCK TABLES `hot_product` WRITE;
+/*!40000 ALTER TABLE `hot_product` DISABLE KEYS */;
+INSERT INTO `hot_product` VALUES (2,201807202140),(1,201807202157),(2,201807242211),(1,201807242216),(2,201807242228),(1,201807242232);
+/*!40000 ALTER TABLE `hot_product` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `product`
 --
 
@@ -86,4 +165,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-02-07 14:28:37
+-- Dump completed on 2019-02-07 20:06:42
