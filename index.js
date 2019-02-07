@@ -277,6 +277,8 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 				res.send({error:"Wrong Request"});
 			}
 			break;
+		default:
+			res.send({error:"Wrong Request"});
 	}
 });
 	function listProducts(filters, size, paging, callback){
