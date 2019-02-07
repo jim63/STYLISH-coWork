@@ -51,7 +51,6 @@ app.post("/api/product", function(req, res){
 				};
 				mysqlCon.query("insert into product set ?", product, function(error, results, fields){
 					if(error){
-						console.log(error);
 						return mysqlCon.rollback(function(){
 							throw error;
 						});
@@ -67,7 +66,6 @@ app.post("/api/product", function(req, res){
 					}
 					mysqlCon.query("insert into variant(color_code,color_name,size,stock,product_id) values ?", [variants], function(error, results, fields){
 						if(error){
-							console.log(error);
 							return mysqlCon.rollback(function(){
 								throw error;
 							});
@@ -101,7 +99,6 @@ app.get("/api/"+API_VERSION+"/products/:listName", function(req, res){
 	let listName=req.params.listName;
 	let result={error:"Wrong Request"};
 	let listCallback=function(data){
-		console.log(data);
 		res.send(data);
 	};
 	switch(listName){
@@ -128,10 +125,9 @@ app.get("/api/"+API_VERSION+"/products/:listName", function(req, res){
 		let offset=paging*size;
 		let filter="";
 		if(category!==null){
-			filter=" where category='"+mysqlCon.escape(category)+"'";
+			filter=" where category="+mysqlCon.escape(category);
 		}
 		let query="select count(*) as total from product";
-		console.log(query+filter);
 		mysqlCon.query(query+filter, function(error, results, fields){
 			if(error){
 				callback({error:"Database Query Error"});
