@@ -386,7 +386,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 			return;
 		}
 		// Get profile from facebook
-		getFacebookProfile(accessToken).then(function(profile){
+		getFacebookProfile(data.access_token).then(function(profile){
 			res.send(profile);
 			mysqlCon.beginTransaction(function(error){
 				if(error){throw error;}
@@ -403,7 +403,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 							email:profile.email,
 							name:profile.name,
 							picture:"https://graph.facebook.com/"+profile.id+"/picture",
-							access_token:accessToken,
+							access_token:data.access_token,
 							access_expired:Date.now()+(30*24*60*60*1000) // 30 days
 						};
 						query="insert into user(provider,email,name,access_token,access_expired) set ?";
