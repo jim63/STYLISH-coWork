@@ -387,6 +387,10 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 		}
 		// Get profile from facebook
 		getFacebookProfile(data.access_token).then(function(profile){
+			if(!profile.id||!profile.name||!profile.email){
+				res.send({error:"Permissions Error: id, name, email are required"});
+				return;
+			}
 			mysqlCon.beginTransaction(function(error){
 				if(error){throw error;}
 				mysqlCon.query("select id from user where email = ? and provider = ?", [profile.email,data.provider], function(error, results, fields){
