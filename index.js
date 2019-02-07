@@ -401,7 +401,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 							provider:data.provider,
 							email:profile.email,
 							name:profile.name,
-							picture:"https://graph.facebook.com/"+profile.id+"/picture",
+							picture:"https://graph.facebook.com/"+profile.id+"/picture?type=large",
 							access_token:data.access_token,
 							access_expired:Date.now()+(30*24*60*60*1000) // 30 days
 						};
@@ -416,13 +416,26 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 								throw error;
 							});
 						}
+						if(!user.id){
+							user.id=results.insertId;
+						}
 						mysqlCon.commit(function(error){
 							if(error){
 								return mysqlCon.rollback(function(){
 									throw error;
 								});
 							}
-							res.send({status:"OK"});
+							res.send({data:{
+								access_token:user.access_token,
+								access_expired:user.access_expired,
+								user:{
+									id:user.id,
+									provider:user.provider,
+									name:user.name,
+									email:user.email,
+									picture:user.picture
+								}
+							}});
 						});
 					});					
 				});
