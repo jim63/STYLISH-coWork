@@ -431,6 +431,8 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 		}).catch(function(error){
 			res.send({error:error});
 		});
+	}else{
+		res.send({error:"Wrong Request"});
 	}
 });
 // Check Out API
