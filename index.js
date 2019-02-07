@@ -30,15 +30,15 @@ app.listen(80, function(){
 // Admin API
 app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 	let upload=multer({dest:"./tmp"}).fields([
-		{name:"mainImage", maxCount:1},
-		{name:"otherImages", maxCount:3}
+		{name:"main_image", maxCount:1},
+		{name:"other_image", maxCount:3}
 	]);	
 	upload(req, res, function(error){
 		if(error){
 			res.send({error:"Upload Images Error"});
 		}else{
-			let colorCodes=req.body.colorCodes.split(",");
-			let colorNames=req.body.colorNames.split(",");
+			let colorCodes=req.body.color_codes.split(",");
+			let colorNames=req.body.color_names.split(",");
 			let sizes=req.body.sizes.split(",");
 			mysqlCon.beginTransaction(function(error){
 				if(error){throw error;}
@@ -84,9 +84,9 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 								});
 							}
 							fs.mkdirSync("./public/assets/"+productId);
-							fs.renameSync(req.files["mainImage"][0].path, "./public/assets/"+productId+"/main.jpg");
-							for(let i=0;i<req.files["otherImages"].length;i++){
-								fs.renameSync(req.files["otherImages"][i].path, "./public/assets/"+productId+"/"+i+".jpg");
+							fs.renameSync(req.files["main_image"][0].path, "./public/assets/"+productId+"/main.jpg");
+							for(let i=0;i<req.files["other_image"].length;i++){
+								fs.renameSync(req.files["other_image"][i].path, "./public/assets/"+productId+"/"+i+".jpg");
 							}
 							res.send({status:"OK"});
 						});
@@ -98,7 +98,7 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 });
 app.post("/api/"+API_VERSION+"/admin/campaign", function(req, res){
 	let campaign={
-		product_id:parseInt(req.body.productId),
+		product_id:parseInt(req.body.product_id),
 		picture:req.body.picture,
 		story:req.body.story
 	};
@@ -196,7 +196,7 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 										product.colors=[];
 										product.sizes=[];
 										product.stocks=[];
-										product.mainImage=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/main.jpg";
+										product.main_image=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/main.jpg";
 										product.images=[
 											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
 											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg"
@@ -219,7 +219,7 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 											product.sizes.push(variant.size);
 										}
 										product.stocks.push({
-											colorCode:variant.color_code,
+											color_code:variant.color_code,
 											size:variant.size,
 											stock:variant.stock
 										});
