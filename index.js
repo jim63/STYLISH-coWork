@@ -135,7 +135,7 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 			if(filters.keyword){
 				filter=" where title like "+mysqlCon.escape("%"+filters.keyword+"%");
 			}else if(filters.category){
-				filter=" where category="+mysqlCon.escape(category);
+				filter=" where category="+mysqlCon.escape(filters.category);
 			}
 		}
 		let query="select count(*) as total from product";
