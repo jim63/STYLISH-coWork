@@ -90,29 +90,33 @@ app.post("/api/product", function(req, res){
 	});
 });
 // Product API
-app.get("/api/"+API_VERSION+"/products/:listName", function(req, res){
+app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 	let paging=req.query.paging;
 	if(!paging || !Number.isInteger(paging)){
 		paging=0;
 	}
 	let size=6;
-	let listName=req.params.listName;
+	let category=req.params.category;
 	let result={error:"Wrong Request"};
 	let listCallback=function(data){
 		res.send(data);
 	};
-	switch(listName){
+	switch(category){
 		case "hots":
 			break;
 		case "all":
 			listProducts(null, size, paging, listCallback);
 			break;
 		case "boys": case "girls": case "accessories":
-			listProducts(listName, size, paging, listCallback);
+			listProducts({
+				category:category
+			}, size, paging, listCallback);
 			break;
 		case "search":
 			if(req.query.keyword){
-				searchProducts(req.query.keyword, size, paging, function(data){
+				listProducts({
+					keyword:req.query.keyword
+				}, size, paging, function(data){
 					console.log(data);
 				});
 			}else{
@@ -121,11 +125,15 @@ app.get("/api/"+API_VERSION+"/products/:listName", function(req, res){
 			break;
 	}
 });
-	function listProducts(category, size, paging, callback){
+	function listProducts(filters, size, paging, callback){
 		let offset=paging*size;
 		let filter="";
-		if(category!==null){
-			filter=" where category="+mysqlCon.escape(category);
+		if(filters!==null){
+			if(filters.keyword){
+				filter=" where title like "+mysqlCon.escape("%"+filters.keyword+"%");
+			}else if(filters.category){
+				filter=" where category="+mysqlCon.escape(category);
+			}
 		}
 		let query="select count(*) as total from product";
 		mysqlCon.query(query+filter, function(error, results, fields){
@@ -185,8 +193,5 @@ app.get("/api/"+API_VERSION+"/products/:listName", function(req, res){
 				});
 			}
 		});
-	}
-	function searchProducts(keyword, size, paging, callback){
-		callback({});
 	}
 // git password: af7258ba52ea0bd3756239234f5f46812cc57510 
