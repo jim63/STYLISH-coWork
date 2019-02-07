@@ -409,7 +409,8 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 						query="insert into user set ?";
 						query=mysql.format(query, user);
 					}else{ // update
-						query="";
+						query="update user set name = ?, access_token = ?, access_expired = ? where email = ?";
+						query=mysql.format(query, [profile.name, data.access_token, now+(30*24*60*60*1000), profile.email]);
 					}
 					mysqlCon.query(query, function(error, results, fields){
 						if(error){
@@ -417,26 +418,32 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 								throw error;
 							});
 						}
-						if(!user.id){
-							user.id=results.insertId;
-						}
-						mysqlCon.commit(function(error){
+						query="select id from user where email = " + mysqlCon.escape(profile.email);
+						mysqlCon.query(query, function(error, results, fields){
 							if(error){
 								return mysqlCon.rollback(function(){
 									throw error;
 								});
 							}
-							res.send({data:{
-								access_token:user.access_token,
-								access_expired:Math.floor((user.access_expired-now)/1000),
-								user:{
-									id:user.id,
-									provider:user.provider,
-									name:user.name,
-									email:user.email,
-									picture:user.picture
+							user.id=results[0].id;
+							mysqlCon.commit(function(error){
+								if(error){
+									return mysqlCon.rollback(function(){
+										throw error;
+									});
 								}
-							}});
+								res.send({data:{
+									access_token:user.access_token,
+									access_expired:Math.floor((user.access_expired-now)/1000),
+									user:{
+										id:user.id,
+										provider:user.provider,
+										name:user.name,
+										email:user.email,
+										picture:user.picture
+									}
+								}});
+							});
 						});
 					});					
 				});
