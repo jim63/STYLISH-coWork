@@ -387,7 +387,6 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 		}
 		// Get profile from facebook
 		getFacebookProfile(data.access_token).then(function(profile){
-			res.send(profile);
 			mysqlCon.beginTransaction(function(error){
 				if(error){throw error;}
 				mysqlCon.query("select id from user where email = ? and provider = ?", [profile.email,data.provider], function(error, results, fields){
@@ -406,7 +405,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 							access_token:data.access_token,
 							access_expired:Date.now()+(30*24*60*60*1000) // 30 days
 						};
-						query="insert into user(provider,email,name,access_token,access_expired) set ?";
+						query="insert into user set ?";
 						query=mysql.format(query, user);
 					}else{ // update
 						query="";
