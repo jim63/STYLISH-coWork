@@ -391,6 +391,68 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 			res.send({error:"Request Error: email and password are required."});
 			return;
 		}
+		mysqlCon.beginTransaction(function(error){
+			if(error){
+				throw error;
+			}
+			mysqlCon.query("select * from user where email = ? and password = ?", [data.email,data.password], function(error, results, fields){
+				if(error){
+					res.send({error:"Database Query Error"});
+					return mysqlCon.rollback(function(){
+						throw error;
+					});
+				}
+				let user;
+				let now=Date.now();
+				let commitCallback=function(error){
+					if(error){
+						res.send({error:"Database Query Error"});
+						return mysqlCon.rollback(function(){
+							throw error;
+						});
+					}
+					if(user===null){
+						res.send({error:"Sign In Error"});
+					}else{
+						res.send({data:{
+							access_token:user.access_token,
+							access_expired:Math.floor((user.access_expired-now)/1000),
+							user:{
+								id:user.id,
+								provider:user.provider,
+								name:user.name,
+								email:user.email,
+								picture:user.picture
+							}
+						}});
+					}
+				};
+				if(results.length===0){ // error
+					user=null;
+					mysqlCon.commit(commitCallback);
+				}else{ // update
+					user={
+						id:results[0].id,
+						provider:results[0].provider,
+						email:results[0].email,
+						name:results[0].name,
+						picture:results[0].picture,
+						access_token:results[0].access_token,
+						access_expired:now+(30*24*60*60*1000) // 30 days
+					};
+					let query="update user set access_token = ?, access_expired = ? where id = ?";
+					mysqlCon.query(query, [user.access_token, user.access_expired, user.id], function(error, results, fields){
+						if(error){
+							res.send({error:"Database Query Error"});
+							return mysqlCon.rollback(function(){
+								throw error;
+							});
+						}
+						mysqlCon.commit(commitCallback);
+					});
+				}
+			});
+		});
 	}else if(data.provider==="facebook"){
 		if(!data.access_token){
 			res.send({error:"Request Error: access token is required."});
@@ -468,7 +530,6 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 		});
 	}else{
 		res.send({error:"Wrong Request"});
-		throw {};
 	}
 });
 // Check Out API
