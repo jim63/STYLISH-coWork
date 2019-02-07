@@ -180,7 +180,7 @@ app.get("/api/"+API_VERSION+"/marketing/hots", function(req, res){
 			let total=data.length;
 			let loaded=0;
 			for(let i=0;i<data.length;i++){
-				listProducts(" where id in ("+data[i].products.join(",")+")", data[i].products.length, 0, function(body){
+				listProducts({where:" where id in ("+data[i].products.join(",")+")"}, data[i].products.length, 0, function(body){
 					data[i].products=body.products;
 					loaded++;
 					if(loaded>=total){
@@ -229,7 +229,9 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 		let offset=paging*size;
 		let filter="";
 		if(filters!==null){
-			if(filters.keyword){
+			if(filters.where){
+				filter=filters.where;
+			}else if(filters.keyword){
 				filter=" where title like "+mysqlCon.escape("%"+filters.keyword+"%");
 			}else if(filters.category){
 				filter=" where category="+mysqlCon.escape(filters.category);
