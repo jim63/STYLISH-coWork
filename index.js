@@ -192,7 +192,7 @@ app.get("/api/"+API_VERSION+"/marketing/hots", function(req, res){
 	});
 });
 // Product API
-app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
+app.get("/api/"+API_VERSION+"/products/details", function(req, res){
 	let productId=parseInt(req.query.id);
 	if(!Number.isInteger(productId)){
 		res.send({error:"Wrong Request"});
