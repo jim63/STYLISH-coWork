@@ -181,7 +181,7 @@ app.get("/api/"+API_VERSION+"/marketing/hots", function(req, res){
 			let loaded=0;
 			for(let i=0;i<data.length;i++){
 				listProducts({where:" where id in ("+data[i].products.join(",")+")"}, data[i].products.length, 0, function(body){
-					data[i].products=body.products;
+					data[i].products=body.data;
 					loaded++;
 					if(loaded>=total){
 						res.send({data:data});
@@ -192,6 +192,60 @@ app.get("/api/"+API_VERSION+"/marketing/hots", function(req, res){
 	});
 });
 // Product API
+app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
+	let productId=parseInt(req.query.id);
+	if(!Number.isInteger(productId)){
+		res.send({error:"Wrong Request"});
+		return;
+	}
+	let query="select * from product where id = ?";
+	mysqlCon.query(query, [productId], function(error, results, fields){
+		if(error){
+			callback({error:"Database Query Error"});
+		}else{
+			if(results.length===0){
+				res.send({data:null});
+			}else{
+				let product=results[0];
+				query="select * from variant where product_id = ?";
+				mysqlCon.query(query, [product.id], function(error, results, fields){
+					if(error){
+						res.send({error:"Database Query Error"});
+					}else{
+						product.colors=[];
+						product.sizes=[];
+						product.stocks=[];
+						product.main_image=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/main.jpg";
+						product.images=[
+							PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
+							PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg"
+						];
+						let variant;
+						for(let i=0;i<results.length;i++){
+							variant=results[i];
+							if(product.colors.findIndex((color)=>{
+								return color.code===variant.color_code
+							})===-1){
+								product.colors.push({
+									code:variant.color_code, name:variant.color_name
+								});
+							}
+							if(product.sizes.indexOf(variant.size)===-1){
+								product.sizes.push(variant.size);
+							}
+							product.stocks.push({
+								color_code:variant.color_code,
+								size:variant.size,
+								stock:variant.stock
+							});
+						}
+						res.send({data:product});
+					}
+				});
+			}
+		}
+	});
+});
 app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 	let paging=parseInt(req.query.paging);
 	if(!Number.isInteger(paging)){
