@@ -51,7 +51,10 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 			let colorNames=req.body.color_names.split(",");
 			let sizes=req.body.sizes.split(",");
 			mysqlCon.beginTransaction(function(error){
-				if(error){throw error;}
+				if(error){
+					res.send({error:"Database Query Error"});
+					throw error;
+				}
 				let product={
 					category:req.body.category,
 					title:req.body.title,
@@ -68,6 +71,7 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 				}
 				mysqlCon.query("insert into product set ?", product, function(error, results, fields){
 					if(error){
+						res.send({error:"Database Query Error"});
 						return mysqlCon.rollback(function(){
 							throw error;
 						});
@@ -83,12 +87,14 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 					}
 					mysqlCon.query("insert into variant(color_code,color_name,size,stock,product_id) values ?", [variants], function(error, results, fields){
 						if(error){
+							res.send({error:"Database Query Error"});
 							return mysqlCon.rollback(function(){
 								throw error;
 							});
 						}
 						mysqlCon.commit(function(error){
 							if(error){
+								res.send({error:"Database Query Error"});
 								return mysqlCon.rollback(function(){
 									throw error;
 								});
@@ -124,12 +130,15 @@ app.post("/api/"+API_VERSION+"/admin/hot", function(req, res){
 	let title=req.body.title;
 	let productIds=req.body.product_ids.split(",");
 	mysqlCon.beginTransaction(function(error){
-		if(error){throw error;}
+		if(error){
+			throw error;
+		}
 		let hot={
 			title:title,
 		};
 		mysqlCon.query("insert into hot set ?", hot, function(error, results, fields){
 			if(error){
+				res.send({error:"Database Query Error"});
 				return mysqlCon.rollback(function(){
 					throw error;
 				});
@@ -143,12 +152,14 @@ app.post("/api/"+API_VERSION+"/admin/hot", function(req, res){
 			}
 			mysqlCon.query("insert into hot_product(hot_id,product_id) values ?", [hotProductMapping], function(error, results, fields){
 				if(error){
+					res.send({error:"Database Query Error"});
 					return mysqlCon.rollback(function(){
 						throw error;
 					});
 				}
 				mysqlCon.commit(function(error){
 					if(error){
+						res.send({error:"Database Query Error"});
 						return mysqlCon.rollback(function(){
 							throw error;
 						});
@@ -377,24 +388,27 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 	let data=req.body;
 	if(data.provider==="native"){
 		if(!data.email||!data.password){
-			res.send({error:"Request Error"});
+			res.send({error:"Request Error: email and password are required."});
 			return;
 		}
 	}else if(data.provider==="facebook"){
 		if(!data.access_token){
-			res.send({error:"Request Error"});
+			res.send({error:"Request Error: access token is required."});
 			return;
 		}
 		// Get profile from facebook
 		getFacebookProfile(data.access_token).then(function(profile){
 			if(!profile.id||!profile.name||!profile.email){
-				res.send({error:"Permissions Error: id, name, email are required"});
+				res.send({error:"Permissions Error: id, name, email are required."});
 				return;
 			}
 			mysqlCon.beginTransaction(function(error){
-				if(error){throw error;}
+				if(error){
+					throw error;
+				}
 				mysqlCon.query("select id from user where email = ? and provider = ?", [profile.email,data.provider], function(error, results, fields){
 					if(error){
+						res.send({error:"Database Query Error"});
 						return mysqlCon.rollback(function(){
 							throw error;
 						});
@@ -419,6 +433,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 					}
 					mysqlCon.query(query, function(error, results, fields){
 						if(error){
+							res.send({error:"Database Query Error"});
 							return mysqlCon.rollback(function(){
 								throw error;
 							});
@@ -428,6 +443,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 						}
 						mysqlCon.commit(function(error){
 							if(error){
+								res.send({error:"Database Query Error"});
 								return mysqlCon.rollback(function(){
 									throw error;
 								});
@@ -452,6 +468,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 		});
 	}else{
 		res.send({error:"Wrong Request"});
+		throw error;
 	}
 });
 // Check Out API
