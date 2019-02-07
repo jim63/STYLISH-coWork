@@ -110,6 +110,17 @@ app.post("/api/"+API_VERSION+"/admin/campaign", function(req, res){
 		}
 	});
 });
+// Marketing Campaign API
+app.get("/api/"+API_VERSION+"/marketing/campaigns", function(req, res){
+	let query="select * from campaign order by id";
+	mysqlCon.query(query, function(error, results, fields){
+		if(error){
+			res.send({error:"Database Query Error"});
+		}else{
+			res.send({data:results});
+		}
+	});
+});
 // Product API
 app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 	let paging=parseInt(req.query.paging);
