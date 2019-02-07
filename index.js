@@ -181,7 +181,7 @@ app.get("/api/"+API_VERSION+"/marketing/hots", function(req, res){
 			let loaded=0;
 			for(let i=0;i<data.length;i++){
 				listProducts(" where id in ("+data[i].products.join(",")+")", data[i].products.length, 0, function(body){
-					data[i].products=body.products;
+					data[i].products=body.data;
 					loaded++;
 					if(loaded>=total){
 						res.send({data:data});
