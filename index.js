@@ -96,7 +96,7 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 });
 // Product API
 app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
-	let paging=req.query.paging;
+	let paging=parseInt(req.query.paging);
 	if(!Number.isInteger(paging)){
 		paging=0;
 	}
