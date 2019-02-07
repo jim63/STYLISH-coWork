@@ -1,3 +1,5 @@
+const PROTOCOL="https://";
+const HOST_NAME="18.214.165.31";
 const API_VERSION="1.0";
 let fs=require("fs");
 // MySQL Initialization
@@ -164,6 +166,11 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 										product.colors=[];
 										product.sizes=[];
 										product.stocks=[];
+										product.mainImage=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/mainImage.jpg";
+										product.images=[
+											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
+											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg"
+										];
 									});
 									let product, variant;
 									for(let i=0;i<results.length;i++){
