@@ -131,59 +131,63 @@ app.get("/api/"+API_VERSION+"/products/:listName", function(req, res){
 			filter=" where category='"+mysqlCon.escape(category)+"'";
 		}
 		let query="select count(*) as total from product";
+		console.log(query+filter);
 		mysqlCon.query(query+filter, function(error, results, fields){
-			let total=results[0].total;
-			let maxPage=Math.floor((total-1)/size);
-			let body={};
-			if(paging<maxPage){
-				body.paging=paging+1;
-			}
-			query="select * from product";
-			mysqlCon.query(query+filter+" limit ?,?", [offset,size], function(error, results, fields){
-				if(error){
-					callback({error:"Database Query Error"});
-				}else{
-					let products=results;
-					query="select * from variant where product_id in ("+products.map((product)=>{
-						return product.id;
-					}).join(",")+")";
-					mysqlCon.query(query, function(error, results, fields){
-						if(error){
-							callback({error:"Database Query Error"});
-						}else{
-							products.forEach((product)=>{
-								product.colors=[];
-								product.sizes=[];
-								product.stocks=[];
-							});
-							let product, variant;
-							for(let i=0;i<results.length;i++){
-								variant=results[i];
-								product=products.find((product)=>{
-									return product.id===variant.product_id;
+			if(error){
+				callback({error:"Database Query Error"});
+			}else{
+				let maxPage=Math.floor((results[0].total-1)/size);
+				let body={};
+				if(paging<maxPage){
+					body.paging=paging+1;
+				}
+				query="select * from product";
+				mysqlCon.query(query+filter+" limit ?,?", [offset,size], function(error, results, fields){
+					if(error){
+						callback({error:"Database Query Error"});
+					}else{
+						let products=results;
+						query="select * from variant where product_id in ("+products.map((product)=>{
+							return product.id;
+						}).join(",")+")";
+						mysqlCon.query(query, function(error, results, fields){
+							if(error){
+								callback({error:"Database Query Error"});
+							}else{
+								products.forEach((product)=>{
+									product.colors=[];
+									product.sizes=[];
+									product.stocks=[];
 								});
-								if(product.colors.findIndex((color)=>{
-									return color.code===variant.color_code
-								})===-1){
-									product.colors.push({
-										code:variant.color_code, name:variant.color_name
+								let product, variant;
+								for(let i=0;i<results.length;i++){
+									variant=results[i];
+									product=products.find((product)=>{
+										return product.id===variant.product_id;
+									});
+									if(product.colors.findIndex((color)=>{
+										return color.code===variant.color_code
+									})===-1){
+										product.colors.push({
+											code:variant.color_code, name:variant.color_name
+										});
+									}
+									if(product.sizes.indexOf(variant.size)===-1){
+										product.sizes.push(variant.size);
+									}
+									product.stocks.push({
+										colorCode:variant.color_code,
+										size:variant.size,
+										stock:variant.stock
 									});
 								}
-								if(product.sizes.indexOf(variant.size)===-1){
-									product.sizes.push(variant.size);
-								}
-								product.stocks.push({
-									colorCode:variant.color_code,
-									size:variant.size,
-									stock:variant.stock
-								});
+								body.data=products;
+								callback(body);
 							}
-							body.data=products;
-							callback(body);
-						}
-					});
-				}
-			});
+						});
+					}
+				});
+			}
 		});
 	}
 	function searchProducts(keyword, size, paging, callback){
