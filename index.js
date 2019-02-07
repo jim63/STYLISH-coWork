@@ -396,6 +396,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 						});
 					}
 					let query, user;
+					let now=Date.now();
 					if(results.length===0){ // insert
 						user={
 							provider:data.provider,
@@ -403,7 +404,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 							name:profile.name,
 							picture:"https://graph.facebook.com/"+profile.id+"/picture?type=large",
 							access_token:data.access_token,
-							access_expired:Date.now()+(30*24*60*60*1000) // 30 days
+							access_expired:now+(30*24*60*60*1000) // 30 days
 						};
 						query="insert into user set ?";
 						query=mysql.format(query, user);
@@ -427,7 +428,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 							}
 							res.send({data:{
 								access_token:user.access_token,
-								access_expired:user.access_expired,
+								access_expired:Math.floor((user.access_expired-now)/1000),
 								user:{
 									id:user.id,
 									provider:user.provider,
