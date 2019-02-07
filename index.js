@@ -110,6 +110,45 @@ app.post("/api/"+API_VERSION+"/admin/campaign", function(req, res){
 		}
 	});
 });
+app.post("/api/"+API_VERSION+"/admin/hot", function(req, res){
+	let title=req.body.title;
+	let productIds=req.body.product_ids.split(",");
+	mysqlCon.beginTransaction(function(error){
+		if(error){throw error;}
+		let hot={
+			title:title,
+		};
+		mysqlCon.query("insert into hot set ?", hot, function(error, results, fields){
+			if(error){
+				return mysqlCon.rollback(function(){
+					throw error;
+				});
+			}
+			let hotId=results.insertId;
+			let hotProductMapping=[];
+			for(let i=0;i<productIds.length;i++){
+				hotProductMapping.push([
+					hotId, parseInt(productIds[i])
+				]);
+			}
+			mysqlCon.query("insert into hot_product(hot_id,product_id) values ?", [hotProductMapping], function(error, results, fields){
+				if(error){
+					return mysqlCon.rollback(function(){
+						throw error;
+					});
+				}
+				mysqlCon.commit(function(error){
+					if(error){
+						return mysqlCon.rollback(function(){
+							throw error;
+						});
+					}
+					res.send({status:"OK"});
+				});
+			});					
+		});
+	});
+});
 // Marketing Campaign API
 app.get("/api/"+API_VERSION+"/marketing/campaigns", function(req, res){
 	let query="select * from campaign order by id";
