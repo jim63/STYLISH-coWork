@@ -395,22 +395,23 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 							throw error;
 						});
 					}
-					let query, user;
+					let query;
 					let now=Date.now();
+					let user={
+						provider:data.provider,
+						email:profile.email,
+						name:profile.name,
+						picture:"https://graph.facebook.com/"+profile.id+"/picture?type=large",
+						access_token:data.access_token,
+						access_expired:now+(30*24*60*60*1000) // 30 days
+					};
 					if(results.length===0){ // insert
-						user={
-							provider:data.provider,
-							email:profile.email,
-							name:profile.name,
-							picture:"https://graph.facebook.com/"+profile.id+"/picture?type=large",
-							access_token:data.access_token,
-							access_expired:now+(30*24*60*60*1000) // 30 days
-						};
 						query="insert into user set ?";
 						query=mysql.format(query, user);
 					}else{ // update
+						user.id=results[0].id;
 						query="update user set name = ?, access_token = ?, access_expired = ? where email = ?";
-						query=mysql.format(query, [profile.name, data.access_token, now+(30*24*60*60*1000), profile.email]);
+						query=mysql.format(query, [user.name, user.access_token, user.access_expired, user.email]);
 					}
 					mysqlCon.query(query, function(error, results, fields){
 						if(error){
@@ -418,32 +419,26 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 								throw error;
 							});
 						}
-						query="select id from user where email = " + mysqlCon.escape(profile.email);
-						mysqlCon.query(query, function(error, results, fields){
+						if(!user.id){
+							user.id=results.insertId;
+						}
+						mysqlCon.commit(function(error){
 							if(error){
 								return mysqlCon.rollback(function(){
 									throw error;
 								});
 							}
-							user.id=results[0].id;
-							mysqlCon.commit(function(error){
-								if(error){
-									return mysqlCon.rollback(function(){
-										throw error;
-									});
+							res.send({data:{
+								access_token:user.access_token,
+								access_expired:Math.floor((user.access_expired-now)/1000),
+								user:{
+									id:user.id,
+									provider:user.provider,
+									name:user.name,
+									email:user.email,
+									picture:user.picture
 								}
-								res.send({data:{
-									access_token:user.access_token,
-									access_expired:Math.floor((user.access_expired-now)/1000),
-									user:{
-										id:user.id,
-										provider:user.provider,
-										name:user.name,
-										email:user.email,
-										picture:user.picture
-									}
-								}});
-							});
+							}});
 						});
 					});					
 				});
