@@ -149,7 +149,7 @@ app.post("/api/"+API_VERSION+"/admin/hot", function(req, res){
 		});
 	});
 });
-// Marketing Campaign API
+// Marketing Campaign API for Front-End
 app.get("/api/"+API_VERSION+"/marketing/campaigns", function(req, res){
 	let query="select * from campaign order by id";
 	mysqlCon.query(query, function(error, results, fields){
@@ -157,6 +157,37 @@ app.get("/api/"+API_VERSION+"/marketing/campaigns", function(req, res){
 			res.send({error:"Database Query Error"});
 		}else{
 			res.send({data:results});
+		}
+	});
+});
+// Marketing Hots API for Apps
+app.get("/api/"+API_VERSION+"/marketing/hots", function(req, res){
+	let query="select hot.title as title,hot_product.product_id as product_id from hot,hot_product where hot.id=hot_product.hot_id order by hot.id";
+	mysqlCon.query(query, function(error, results, fields){
+		if(error){
+			res.send({error:"Database Query Error"});
+		}else{
+			let data=[];
+			let hot;
+			for(let i=0;i<results.length;i++){
+				hot=data.find((hot)=>{return hot.title===results[i].title});
+				if(hot){
+					hot.products.push(results[i].product_id);
+				}else{
+					data.push({title:results[i].title, products:[results[i].product_id]});
+				}
+			}
+			let total=data.length;
+			let loaded=0;
+			for(let i=0;i<data.length;i++){
+				listProducts(" where id in ("+data[i].products.join(",")+")", data[i].products.length, 0, function(body){
+					data[i].products=body.products;
+					loaded++;
+					if(loaded>=total){
+						res.send({data:data});
+					}
+				});
+			}
 		}
 	});
 });
