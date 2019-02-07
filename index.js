@@ -116,9 +116,7 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 			if(req.query.keyword){
 				listProducts({
 					keyword:req.query.keyword
-				}, size, paging, function(data){
-					console.log(data);
-				});
+				}, size, paging, listCallback);
 			}else{
 				res.send({error:"Wrong Request"});
 			}
@@ -150,45 +148,50 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 					if(error){
 						callback({error:"Database Query Error"});
 					}else{
-						let products=results;
-						query="select * from variant where product_id in ("+products.map((product)=>{
-							return product.id;
-						}).join(",")+")";
-						mysqlCon.query(query, function(error, results, fields){
-							if(error){
-								callback({error:"Database Query Error"});
-							}else{
-								products.forEach((product)=>{
-									product.colors=[];
-									product.sizes=[];
-									product.stocks=[];
-								});
-								let product, variant;
-								for(let i=0;i<results.length;i++){
-									variant=results[i];
-									product=products.find((product)=>{
-										return product.id===variant.product_id;
+						if(results.length===0){
+							body.data=[];
+							callback(body);
+						}else{
+							let products=results;
+							query="select * from variant where product_id in ("+products.map((product)=>{
+								return product.id;
+							}).join(",")+")";
+							mysqlCon.query(query, function(error, results, fields){
+								if(error){
+									callback({error:"Database Query Error"});
+								}else{
+									products.forEach((product)=>{
+										product.colors=[];
+										product.sizes=[];
+										product.stocks=[];
 									});
-									if(product.colors.findIndex((color)=>{
-										return color.code===variant.color_code
-									})===-1){
-										product.colors.push({
-											code:variant.color_code, name:variant.color_name
+									let product, variant;
+									for(let i=0;i<results.length;i++){
+										variant=results[i];
+										product=products.find((product)=>{
+											return product.id===variant.product_id;
+										});
+										if(product.colors.findIndex((color)=>{
+											return color.code===variant.color_code
+										})===-1){
+											product.colors.push({
+												code:variant.color_code, name:variant.color_name
+											});
+										}
+										if(product.sizes.indexOf(variant.size)===-1){
+											product.sizes.push(variant.size);
+										}
+										product.stocks.push({
+											colorCode:variant.color_code,
+											size:variant.size,
+											stock:variant.stock
 										});
 									}
-									if(product.sizes.indexOf(variant.size)===-1){
-										product.sizes.push(variant.size);
-									}
-									product.stocks.push({
-										colorCode:variant.color_code,
-										size:variant.size,
-										stock:variant.stock
-									});
+									body.data=products;
+									callback(body);
 								}
-								body.data=products;
-								callback(body);
-							}
-						});
+							});
+						}
 					}
 				});
 			}
