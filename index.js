@@ -525,7 +525,7 @@ app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
 				return;
 			}
 			request({
-				url:"https://graph.facebook.com/me?access_token="+accessToken,
+				url:"https://graph.facebook.com/me?fields=id,name,email&access_token="+accessToken,
 				method:"GET"
 			}, function(error, response, body){
 				body=JSON.parse(body);
