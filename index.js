@@ -19,13 +19,15 @@ mysqlCon.connect(function(err){
 });
 // Express Initialization
 let express=require("express");
+let bodyparser=require("body-parser");
 let multer=require("multer");
 let app=express();
 app.use(express.static("public"));
+app.use(bodyparser.urlencoded({extended:true}));
 app.listen(80, function(){
 	console.log("Server Started");
 });
-// Product Management
+// Admin API
 app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 	let upload=multer({dest:"./tmp"}).fields([
 		{name:"mainImage", maxCount:1},
@@ -91,6 +93,20 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 					});					
 				});
 			});
+		}
+	});
+});
+app.post("/api/"+API_VERSION+"/admin/campaign", function(req, res){
+	let campaign={
+		product_id:parseInt(req.body.productId),
+		picture:req.body.picture,
+		story:req.body.story
+	};
+	mysqlCon.query("insert into campaign set ?", campaign, function(error, results, fields){
+		if(error){
+			res.send({error:"Add Campaign Error"});
+		}else{
+			res.send({status:"OK"});
 		}
 	});
 });

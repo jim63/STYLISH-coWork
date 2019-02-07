@@ -17,35 +17,6 @@ input{
 	width:300px;padding:5px;
 }
 </style>
-<script>
-function createProduct(f){
-	let id=f.id.value;
-	let name=f.name.value;
-	let category=f.category.options[f.category.selectedIndex].value;
-	let price=f.price.value;
-	let colors=f.colors.value.split(",");
-	let sizes=f.sizes.value.split(",");
-	let summary=f.summary.value.replace(/\r\n/g,"<br/>").replace(/\n/g,"<br/>");
-	let story=f.story.value.replace(/\r\n/g,"<br/>").replace(/\n/g,"<br/>");
-	let now=(new Date()).getTime();
-	let data={
-		id:id, name:name, category:category,
-		price:price, summary:summary, story:story,
-		colors:f.colors.value, sizes:f.sizes.value,
-		update_time:now,
-		variants:{}
-	};
-	for(let i=0;i<sizes.length;i++){
-		for(let j=0;j<colors.length;j++){
-			data.variants[sizes[i]+"-"+colors[j]]={
-				size:sizes[i],
-				color:colors[j],
-				stock:Math.floor(Math.random()*10)
-			}
-		}
-	}
-}
-</script>
 </head>
 <body>
 	<h3>Create a New Product</h3>
