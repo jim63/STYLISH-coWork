@@ -1,10 +1,12 @@
 const PROTOCOL="http://";
 const HOST_NAME="18.214.165.31";
 const API_VERSION="1.0";
-let fs=require("fs");
+// Utilities
+const fs=require("fs");
+const request=require("request");
 // MySQL Initialization
-let mysql=require("mysql");
-let mysqlCon=mysql.createConnection({
+const mysql=require("mysql");
+const mysqlCon=mysql.createConnection({
 	host:"localhost",
 	user:"root",
 	password:"123456",
@@ -18,14 +20,22 @@ mysqlCon.connect(function(err){
 	}
 });
 // Express Initialization
-let express=require("express");
-let bodyparser=require("body-parser");
-let multer=require("multer");
-let app=express();
+const express=require("express");
+const bodyparser=require("body-parser");
+const multer=require("multer");
+const app=express();
 app.use(express.static("public"));
+app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({extended:true}));
 app.listen(80, function(){
 	console.log("Server Started");
+});
+app.use("/api/", function(req, res, next){
+	res.set("Access-Control-Allow-Origin", "*");
+	res.set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept");
+	res.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+	res.set("Access-Control-Allow-Credentials", "true");
+	next();
 });
 // Admin API
 app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
@@ -362,4 +372,169 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 			}
 		});
 	}
+// User API
+app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
+	/*
+	let data=req.body;
+	if(!data.order||!data.order.total||!data.order.list||!data.prime){
+		res.send({error:"Create Order Error: Wrong Data Format"});
+		return;
+	}
+	*/
+	let accessToken=req.get("Authorization");
+	if(accessToken){
+		accessToken=accessToken.replace("Bearer ", "");
+	}
+	// Get info from facebook
+	getFacebookProfile(accessToken).then(function(profile){
+		res.send(profile);
+		/*
+		let now=new Date();
+		let id=now.getMonth()+""+now.getDate()+""+(now.getTime()%(24*60*60*1000))+""+Math.floor(Math.random()*10);
+		let orderData={
+			id:id,
+			order:data.order,
+			time:now.getTime(),
+			status:-1 // -1 for init (not pay yet)
+		};
+		if(profile!==null&&profile.id){
+			orderData.fbid=profile.id;
+		}
+		db.ref("/orders/"+id).set(orderData, function(error){
+			if(error){
+				res.send({error:"Create Order Error"});
+			}else{
+				// start payment
+				let partnerKey="partner_PHgswvYEk4QY6oy3n8X3CwiQCVQmv91ZcFoD5VrkGFXo8N7BFiLUxzeG";
+				request({
+					url:"https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime",
+					method:"POST",
+					headers:{
+						"Content-Type":"application/json",
+						"x-api-key":partnerKey
+					},
+					json:{
+						"prime": data.prime,
+						"partner_key": partnerKey,
+						"merchant_id": "AppWorksSchool_CTBC",
+						"details": "Stylish Payment",
+						"amount": data.order.total,
+						"cardholder": {
+							"phone_number": data.order.recipient.phone,
+							"name": data.order.recipient.name,
+							"email": data.order.recipient.email
+						},
+						"remember": false
+					}
+				}, function(error, response, body){
+					if(body.status===0){ // OK
+						db.ref("/orders/"+id).update({
+							payment:body,
+							status:0
+						}, function(error){
+							res.send({number:id});
+						});
+					}else{
+						res.send({error:"Payment Error: "+body.msg});
+					}
+				});
+			}
+		});
+		*/
+	}).catch(function(error){
+		res.send({error:error});
+	});
+});
+// Check Out API
+app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
+	/*
+	let data=req.body;
+	if(!data.order||!data.order.total||!data.order.list||!data.prime){
+		res.send({error:"Create Order Error: Wrong Data Format"});
+		return;
+	}
+	*/
+	let accessToken=req.get("Authorization");
+	if(accessToken){
+		accessToken=accessToken.replace("Bearer ", "");
+	}
+	// Get info from facebook
+	getFacebookProfile(accessToken).then(function(profile){
+		res.send(profile);
+		/*
+		let now=new Date();
+		let id=now.getMonth()+""+now.getDate()+""+(now.getTime()%(24*60*60*1000))+""+Math.floor(Math.random()*10);
+		let orderData={
+			id:id,
+			order:data.order,
+			time:now.getTime(),
+			status:-1 // -1 for init (not pay yet)
+		};
+		if(profile!==null&&profile.id){
+			orderData.fbid=profile.id;
+		}
+		db.ref("/orders/"+id).set(orderData, function(error){
+			if(error){
+				res.send({error:"Create Order Error"});
+			}else{
+				// start payment
+				let partnerKey="partner_PHgswvYEk4QY6oy3n8X3CwiQCVQmv91ZcFoD5VrkGFXo8N7BFiLUxzeG";
+				request({
+					url:"https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime",
+					method:"POST",
+					headers:{
+						"Content-Type":"application/json",
+						"x-api-key":partnerKey
+					},
+					json:{
+						"prime": data.prime,
+						"partner_key": partnerKey,
+						"merchant_id": "AppWorksSchool_CTBC",
+						"details": "Stylish Payment",
+						"amount": data.order.total,
+						"cardholder": {
+							"phone_number": data.order.recipient.phone,
+							"name": data.order.recipient.name,
+							"email": data.order.recipient.email
+						},
+						"remember": false
+					}
+				}, function(error, response, body){
+					if(body.status===0){ // OK
+						db.ref("/orders/"+id).update({
+							payment:body,
+							status:0
+						}, function(error){
+							res.send({number:id});
+						});
+					}else{
+						res.send({error:"Payment Error: "+body.msg});
+					}
+				});
+			}
+		});
+		*/
+	}).catch(function(error){
+		res.send({error:error});
+	});
+});
+	let getFacebookProfile=function(accessToken){
+		return new Promise((resolve, reject)=>{
+			if(!accessToken){
+				resolve(null);
+				return;
+			}
+			request({
+				url:"https://graph.facebook.com/me?access_token="+accessToken,
+				method:"GET"
+			}, function(error, response, body){
+				body=JSON.parse(body);
+				if(body.error){
+					reject(body.error);
+				}else{
+					resolve(body);
+				}
+			});
+		});
+	};
 // git password: af7258ba52ea0bd3756239234f5f46812cc57510 
