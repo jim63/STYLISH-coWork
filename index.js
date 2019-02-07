@@ -374,76 +374,64 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 	}
 // User API
 app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
-	/*
 	let data=req.body;
-	if(!data.order||!data.order.total||!data.order.list||!data.prime){
-		res.send({error:"Create Order Error: Wrong Data Format"});
-		return;
-	}
-	*/
-	let accessToken=req.get("Authorization");
-	if(accessToken){
-		accessToken=accessToken.replace("Bearer ", "");
-	}
-	// Get info from facebook
-	getFacebookProfile(accessToken).then(function(profile){
-		res.send(profile);
-		/*
-		let now=new Date();
-		let id=now.getMonth()+""+now.getDate()+""+(now.getTime()%(24*60*60*1000))+""+Math.floor(Math.random()*10);
-		let orderData={
-			id:id,
-			order:data.order,
-			time:now.getTime(),
-			status:-1 // -1 for init (not pay yet)
-		};
-		if(profile!==null&&profile.id){
-			orderData.fbid=profile.id;
+	if(data.provider==="native"){
+		if(!data.email||!data.password){
+			res.send({error:"Request Error"});
+			return;
 		}
-		db.ref("/orders/"+id).set(orderData, function(error){
-			if(error){
-				res.send({error:"Create Order Error"});
-			}else{
-				// start payment
-				let partnerKey="partner_PHgswvYEk4QY6oy3n8X3CwiQCVQmv91ZcFoD5VrkGFXo8N7BFiLUxzeG";
-				request({
-					url:"https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime",
-					method:"POST",
-					headers:{
-						"Content-Type":"application/json",
-						"x-api-key":partnerKey
-					},
-					json:{
-						"prime": data.prime,
-						"partner_key": partnerKey,
-						"merchant_id": "AppWorksSchool_CTBC",
-						"details": "Stylish Payment",
-						"amount": data.order.total,
-						"cardholder": {
-							"phone_number": data.order.recipient.phone,
-							"name": data.order.recipient.name,
-							"email": data.order.recipient.email
-						},
-						"remember": false
-					}
-				}, function(error, response, body){
-					if(body.status===0){ // OK
-						db.ref("/orders/"+id).update({
-							payment:body,
-							status:0
-						}, function(error){
-							res.send({number:id});
+	}else if(data.provider==="facebook"){
+		if(!data.access_token){
+			res.send({error:"Request Error"});
+			return;
+		}
+		// Get profile from facebook
+		getFacebookProfile(accessToken).then(function(profile){
+			res.send(profile);
+			mysqlCon.beginTransaction(function(error){
+				if(error){throw error;}
+				mysqlCon.query("select id from user where email = ? and provider = ?", [profile.email,data.provider], function(error, results, fields){
+					if(error){
+						return mysqlCon.rollback(function(){
+							throw error;
 						});
-					}else{
-						res.send({error:"Payment Error: "+body.msg});
 					}
+					let query, user;
+					if(results.length===0){ // insert
+						user={
+							provider:data.provider,
+							email:profile.email,
+							name:profile.name,
+							picture:"https://graph.facebook.com/"+profile.id+"/picture",
+							access_token:accessToken,
+							access_expired:Date.now()+(30*24*60*60*1000) // 30 days
+						};
+						query="insert into user(provider,email,name,access_token,access_expired) set ?";
+						query=mysql.format(query, user);
+					}else{ // update
+						query="";
+					}
+					mysqlCon.query(query, function(error, results, fields){
+						if(error){
+							return mysqlCon.rollback(function(){
+								throw error;
+							});
+						}
+						mysqlCon.commit(function(error){
+							if(error){
+								return mysqlCon.rollback(function(){
+									throw error;
+								});
+							}
+							res.send({status:"OK"});
+						});
+					});					
 				});
-			}
+			});
+		}).catch(function(error){
+			res.send({error:error});
 		});
-		*/
-	}).catch(function(error){
-		res.send({error:error});
-	});
+	}
 });
 // Check Out API
 app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
