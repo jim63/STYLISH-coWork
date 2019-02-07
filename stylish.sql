@@ -127,6 +127,36 @@ INSERT INTO `product` VALUES (201807201824,'girls','前開衩扭結洋裝','厚�
 UNLOCK TABLES;
 
 --
+-- Table structure for table `user`
+--
+
+DROP TABLE IF EXISTS `user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `provider` varchar(15) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `name` varchar(127) NOT NULL,
+  `picture` varchar(255) DEFAULT NULL,
+  `access_token` varchar(255) NOT NULL,
+  `access_expired` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10005 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user`
+--
+
+LOCK TABLES `user` WRITE;
+/*!40000 ALTER TABLE `user` DISABLE KEYS */;
+INSERT INTO `user` VALUES (10004,'facebook','padalab@gmail.com',NULL,'Chao-Wei Peng','https://graph.facebook.com/10212892004275674/picture?type=large','EAAca49qKZCDkBADGEYjHZAHQ8me0KJaB3eLXFcTbctegQWMn47meZBoDUKqTBvmckiKmKFXBt0xTpZBjbupJyqG1dsVfI53cdTG2E9u1ZALYuZBKJZBOurErWFMYK243tI34ZBSBLKlV5hmlRTSnutXd2mTxFdj9ZCKgOeZB94WFaIVTBViRpqdb9Ey3btyXmIzcUZD',1552165387427);
+/*!40000 ALTER TABLE `user` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `variant`
 --
 
@@ -165,4 +195,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-02-07 20:06:42
+-- Dump completed on 2019-02-07 21:25:18
