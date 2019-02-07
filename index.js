@@ -1,4 +1,4 @@
-const PROTOCOL="https://";
+const PROTOCOL="http://";
 const HOST_NAME="18.214.165.31";
 const API_VERSION="1.0";
 let fs=require("fs");
@@ -26,7 +26,7 @@ app.listen(80, function(){
 	console.log("Server Started");
 });
 // Product Management
-app.post("/api/product", function(req, res){
+app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 	let upload=multer({dest:"./tmp"}).fields([
 		{name:"mainImage", maxCount:1},
 		{name:"otherImages", maxCount:3}
@@ -51,6 +51,9 @@ app.post("/api/product", function(req, res){
 					note:req.body.note,
 					story:req.body.story
 				};
+				if(req.body.id){
+					product.id=req.body.id;
+				}
 				mysqlCon.query("insert into product set ?", product, function(error, results, fields){
 					if(error){
 						return mysqlCon.rollback(function(){
@@ -166,7 +169,7 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 										product.colors=[];
 										product.sizes=[];
 										product.stocks=[];
-										product.mainImage=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/mainImage.jpg";
+										product.mainImage=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/main.jpg";
 										product.images=[
 											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
 											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg"

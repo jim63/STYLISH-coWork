@@ -49,7 +49,8 @@ function createProduct(f){
 </head>
 <body>
 	<h3>Create a New Product</h3>
-	<form method="post" action="/api/product" enctype="multipart/form-data">
+	<form method="post" action="/api/1.0/admin/product" enctype="multipart/form-data">
+		ID <input type="text" name="id" /><br/>
 		Category <select name="category">
 			<option value="girls">Girls</option>
 			<option value="boys">Boys</option>
