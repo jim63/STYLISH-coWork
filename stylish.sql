@@ -95,6 +95,63 @@ INSERT INTO `hot_product` VALUES (2,201807202140),(1,201807202157),(2,2018072422
 UNLOCK TABLES;
 
 --
+-- Table structure for table `order_table`
+--
+
+DROP TABLE IF EXISTS `order_table`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `order_table` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `number` varchar(255) NOT NULL,
+  `time` bigint(20) unsigned NOT NULL,
+  `status` tinyint(4) NOT NULL,
+  `details` json NOT NULL,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user` (`user_id`),
+  CONSTRAINT `order_table_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `order_table`
+--
+
+LOCK TABLES `order_table` WRITE;
+/*!40000 ALTER TABLE `order_table` DISABLE KEYS */;
+INSERT INTO `order_table` VALUES (1,'18556445567',1549639644556,0,'{\"list\": [{\"id\": 123, \"qty\": 1, \"name\": \"test\", \"size\": \"S\", \"color\": {\"code\": \"CCCCCC\", \"name\": \"淺灰\"}, \"price\": 100}], \"total\": 120, \"freight\": 20, \"payment\": \"credit_card\", \"shipping\": \"delivery\", \"subtotal\": 100, \"recipient\": {\"name\": \"ply\", \"time\": \"anytime\", \"email\": \"test@test.com\", \"phone\": \"0912345678\", \"address\": \"台北市文山區\"}}',NULL),(2,'18559608824',1549639960882,0,'{\"list\": [{\"id\": 123, \"qty\": 1, \"name\": \"test\", \"size\": \"S\", \"color\": {\"code\": \"CCCCCC\", \"name\": \"淺灰\"}, \"price\": 100}], \"total\": 120, \"freight\": 20, \"payment\": \"credit_card\", \"shipping\": \"delivery\", \"subtotal\": 100, \"recipient\": {\"name\": \"ply\", \"time\": \"anytime\", \"email\": \"test@test.com\", \"phone\": \"0912345678\", \"address\": \"台北市文山區\"}}',10005),(3,'18561322535',1549640132253,0,'{\"list\": [{\"id\": 123, \"qty\": 1, \"name\": \"test\", \"size\": \"S\", \"color\": {\"code\": \"CCCCCC\", \"name\": \"淺灰\"}, \"price\": 100}], \"total\": 120, \"freight\": 20, \"payment\": \"credit_card\", \"shipping\": \"delivery\", \"subtotal\": 100, \"recipient\": {\"name\": \"ply\", \"time\": \"anytime\", \"email\": \"test@test.com\", \"phone\": \"0912345678\", \"address\": \"台北市文山區\"}}',10004);
+/*!40000 ALTER TABLE `order_table` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `payment`
+--
+
+DROP TABLE IF EXISTS `payment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `payment` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `order_id` bigint(20) unsigned NOT NULL,
+  `details` json NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `order_table` (`order_id`),
+  CONSTRAINT `payment_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `order_table` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `payment`
+--
+
+LOCK TABLES `payment` WRITE;
+/*!40000 ALTER TABLE `payment` DISABLE KEYS */;
+INSERT INTO `payment` VALUES (1,1,'{\"msg\": \"Success\", \"amount\": 120, \"status\": 0, \"acquirer\": \"TW_CTBC\", \"currency\": \"TWD\", \"auth_code\": \"047574\", \"card_info\": {\"type\": 1, \"level\": \"\", \"issuer\": \"\", \"country\": \"UNITED KINGDOM\", \"funding\": 0, \"bin_code\": \"424242\", \"last_four\": \"4242\", \"country_code\": \"GB\"}, \"order_number\": \"\", \"rec_trade_id\": \"D20190208PivBQI\", \"bank_result_msg\": \"\", \"bank_result_code\": \"\", \"bank_transaction_id\": \"TP20190208PivBQI\", \"bank_transaction_time\": {\"end_time_millis\": \"1549639645314\", \"start_time_millis\": \"1549639645314\"}, \"transaction_time_millis\": 1549639645284}'),(2,2,'{\"msg\": \"Success\", \"amount\": 120, \"status\": 0, \"acquirer\": \"TW_CTBC\", \"currency\": \"TWD\", \"auth_code\": \"253397\", \"card_info\": {\"type\": 1, \"level\": \"\", \"issuer\": \"\", \"country\": \"UNITED KINGDOM\", \"funding\": 0, \"bin_code\": \"424242\", \"last_four\": \"4242\", \"country_code\": \"GB\"}, \"order_number\": \"\", \"rec_trade_id\": \"D20190208VprU24\", \"bank_result_msg\": \"\", \"bank_result_code\": \"\", \"bank_transaction_id\": \"TP20190208VprU24\", \"bank_transaction_time\": {\"end_time_millis\": \"1549639961699\", \"start_time_millis\": \"1549639961699\"}, \"transaction_time_millis\": 1549639961660}'),(3,3,'{\"msg\": \"Success\", \"amount\": 120, \"status\": 0, \"acquirer\": \"TW_CTBC\", \"currency\": \"TWD\", \"auth_code\": \"648718\", \"card_info\": {\"type\": 1, \"level\": \"\", \"issuer\": \"\", \"country\": \"UNITED KINGDOM\", \"funding\": 0, \"bin_code\": \"424242\", \"last_four\": \"4242\", \"country_code\": \"GB\"}, \"order_number\": \"\", \"rec_trade_id\": \"D20190208zc8YRx\", \"bank_result_msg\": \"\", \"bank_result_code\": \"\", \"bank_transaction_id\": \"TP20190208zc8YRx\", \"bank_transaction_time\": {\"end_time_millis\": \"1549640133010\", \"start_time_millis\": \"1549640133010\"}, \"transaction_time_millis\": 1549640132983}');
+/*!40000 ALTER TABLE `payment` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `product`
 --
 
@@ -143,7 +200,7 @@ CREATE TABLE `user` (
   `access_token` varchar(255) NOT NULL,
   `access_expired` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10005 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=10006 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -152,7 +209,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (10004,'facebook','padalab@gmail.com',NULL,'Chao-Wei Peng','https://graph.facebook.com/10212892004275674/picture?type=large','EAAca49qKZCDkBADGEYjHZAHQ8me0KJaB3eLXFcTbctegQWMn47meZBoDUKqTBvmckiKmKFXBt0xTpZBjbupJyqG1dsVfI53cdTG2E9u1ZALYuZBKJZBOurErWFMYK243tI34ZBSBLKlV5hmlRTSnutXd2mTxFdj9ZCKgOeZB94WFaIVTBViRpqdb9Ey3btyXmIzcUZD',1552165387427);
+INSERT INTO `user` VALUES (10004,'facebook','padalab@gmail.com',NULL,'Chao-Wei Peng','https://graph.facebook.com/10212892004275674/picture?type=large','EAAca49qKZCDkBAKVRG3WDOSYNi6c5HZBMCZAcKP2DOOvfsOSZB9qL8LzkhLiaRMqHONAuJuW3FIhmIf89XLD1mVKPcLpVETKcZA6wo68IMbtVVoD1iL1UdQJJNE9nCeEkvk3kIEuVjHbIJFaZAyguaodtPhPmABWecFSyUmYXbs8vV3rCZCJ0LASn9iuKygv90ZD',1552232118126),(10005,'native','test@test.com','test','CWPeng',NULL,'05040e3403825b188cba7e3260113bd8a09d5a22066b2d43eecfe922e383dbce',1552231866515);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -195,4 +252,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-02-07 21:25:18
+-- Dump completed on 2019-02-08 15:37:26
