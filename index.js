@@ -675,7 +675,7 @@ app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
 			details:JSON.stringify(data.order)
 		};
 		if(profile!==null&&profile.id){
-			orderRecord.userId=profile.id;
+			orderRecord.user_id=profile.id;
 		}
 		let query="insert into order_table set ?";
 		mysqlCon.query(query, orderRecord, function(error, results, fields){
