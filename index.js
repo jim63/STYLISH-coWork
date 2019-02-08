@@ -607,7 +607,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 		res.send({error:"Wrong Request"});
 	}
 });
-app.post("/api/"+API_VERSION+"/user/profile", function(req, res){
+app.get("/api/"+API_VERSION+"/user/profile", function(req, res){
 	let accessToken=req.get("Authorization");
 	if(accessToken){
 		accessToken=accessToken.replace("Bearer ", "");
