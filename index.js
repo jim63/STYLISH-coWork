@@ -235,7 +235,7 @@ app.get("/api/"+API_VERSION+"/products/details", function(req, res){
 					}else{
 						product.colors=[];
 						product.sizes=[];
-						product.stocks=[];
+						product.variants=[];
 						product.main_image=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/main.jpg";
 						product.images=[
 							PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
@@ -254,7 +254,7 @@ app.get("/api/"+API_VERSION+"/products/details", function(req, res){
 							if(product.sizes.indexOf(variant.size)===-1){
 								product.sizes.push(variant.size);
 							}
-							product.stocks.push({
+							product.variants.push({
 								color_code:variant.color_code,
 								size:variant.size,
 								stock:variant.stock
@@ -344,7 +344,7 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 									products.forEach((product)=>{
 										product.colors=[];
 										product.sizes=[];
-										product.stocks=[];
+										product.variants=[];
 										product.main_image=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/main.jpg";
 										product.images=[
 											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
@@ -367,7 +367,7 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 										if(product.sizes.indexOf(variant.size)===-1){
 											product.sizes.push(variant.size);
 										}
-										product.stocks.push({
+										product.variants.push({
 											color_code:variant.color_code,
 											size:variant.size,
 											stock:variant.stock
