@@ -607,6 +607,32 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 		res.send({error:"Wrong Request"});
 	}
 });
+app.post("/api/"+API_VERSION+"/user/profile", function(req, res){
+	let accessToken=req.get("Authorization");
+	if(accessToken){
+		accessToken=accessToken.replace("Bearer ", "");
+	}else{
+		res.send({error:"Wrong Request: authorization is required."});
+		return;
+	}
+	mysqlCon.query("select * from user where access_token = ?", [accessToken], function(error, results, fields){
+		if(error){
+			res.send({error:"Database Query Error"});
+		}else{
+			if(results.length===0){
+				res.send({error:"Invalid Access Token"});
+			}else{
+				res.send({data:{
+					id:results[0].id,
+					provider:results[0].provider,
+					name:results[0].name,
+					email:results[0].email,
+					picture:results[0].picture
+				}});
+			}
+		}
+	});
+});
 // Check Out API
 app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
 	/*
