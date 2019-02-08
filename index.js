@@ -672,7 +672,7 @@ app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
 			number:number,
 			time:now.getTime(),
 			status:-1, // -1 for init (not pay yet)
-			details:data.order
+			details:JSON.stringify(data.order)
 		};
 		if(profile!==null&&profile.id){
 			orderRecord.userId=profile.id;
@@ -709,7 +709,7 @@ app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
 					if(body.status===0){ // OK
 						let payment={
 							order_id:orderId,
-							details:body
+							details:JSON.stringify(body)
 						};
 						createPayment(payment, function(result){
 							if(true){
