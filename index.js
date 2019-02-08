@@ -239,6 +239,8 @@ app.get("/api/"+API_VERSION+"/products/details", function(req, res){
 						product.main_image=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/main.jpg";
 						product.images=[
 							PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
+							PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg",
+							PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
 							PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg"
 						];
 						let variant;
@@ -347,6 +349,8 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 										product.variants=[];
 										product.main_image=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/main.jpg";
 										product.images=[
+											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
+											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg",
 											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
 											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg"
 										];
