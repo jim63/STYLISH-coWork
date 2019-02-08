@@ -2,6 +2,7 @@ const PROTOCOL="http://";
 const HOST_NAME="18.214.165.31";
 const API_VERSION="1.0";
 // Utilities
+const crypto=require("crypto");
 const fs=require("fs");
 const request=require("request");
 // MySQL Initialization
@@ -388,6 +389,73 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 		});
 	}
 // User API
+app.post("/api/"+API_VERSION+"/user/signup", function(req, res){
+	let data=req.body;
+	if(!data.name||!data.email||!data.password){
+		res.send({error:"Request Error: name, email and password are required."});
+		return;
+	}
+	mysqlCon.beginTransaction(function(error){
+		if(error){
+			throw error;
+		}
+		mysqlCon.query("select * from user where email = ?", [data.email], function(error, results, fields){
+			if(error){
+				res.send({error:"Database Query Error"});
+				return mysqlCon.rollback(function(){
+					throw error;
+				});
+			}
+			if(results.length>0){
+				res.send({error:"Email Already Exists"});
+				return;
+			}
+			let commitCallback=function(error){
+				if(error){
+					res.send({error:"Database Query Error"});
+					return mysqlCon.rollback(function(){
+						throw error;
+					});
+				}
+				res.send({data:{
+					access_token:user.access_token,
+					access_expired:Math.floor((user.access_expired-now)/1000),
+					user:{
+						id:user.id,
+						provider:user.provider,
+						name:user.name,
+						email:user.email,
+						picture:user.picture
+					}
+				}});
+			};
+			let now=Date.now();
+			let sha=crypto.createHash("sha256");
+			sha.update(data.email+data.password+now);
+			let accessToken=sha.digest("hex");
+			let user={
+				provider:"native",
+				email:data.email,
+				password:data.password,
+				name:data.name,
+				picture:null,
+				access_token:accessToken,
+				access_expired:now+(30*24*60*60*1000) // 30 days
+			};
+			let query="insert into user set ?";
+			mysqlCon.query(query, user, function(error, results, fields){
+				if(error){
+					res.send({error:"Database Query Error"});
+					return mysqlCon.rollback(function(){
+						throw error;
+					});
+				}
+				user.id=results.insertId;
+				mysqlCon.commit(commitCallback);
+			});
+		});
+	});
+});
 app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 	let data=req.body;
 	if(data.provider==="native"){
