@@ -1,6 +1,7 @@
 const PROTOCOL="http://";
 const HOST_NAME="18.214.165.31";
 const API_VERSION="1.0";
+const TAPPAY_PARTNER_KEY="partner_PHgswvYEk4QY6oy3n8X3CwiQCVQmv91ZcFoD5VrkGFXo8N7BFiLUxzeG";
 // Utilities
 const crypto=require("crypto");
 const fs=require("fs");
@@ -607,6 +608,25 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 		res.send({error:"Wrong Request"});
 	}
 });
+	let getFacebookProfile=function(accessToken){
+		return new Promise((resolve, reject)=>{
+			if(!accessToken){
+				resolve(null);
+				return;
+			}
+			request({
+				url:"https://graph.facebook.com/me?fields=id,name,email&access_token="+accessToken,
+				method:"GET"
+			}, function(error, response, body){
+				body=JSON.parse(body);
+				if(body.error){
+					reject(body.error);
+				}else{
+					resolve(body);
+				}
+			});
+		});
+	};
 app.get("/api/"+API_VERSION+"/user/profile", function(req, res){
 	let accessToken=req.get("Authorization");
 	if(accessToken){
@@ -635,48 +655,46 @@ app.get("/api/"+API_VERSION+"/user/profile", function(req, res){
 });
 // Check Out API
 app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
-	/*
 	let data=req.body;
 	if(!data.order||!data.order.total||!data.order.list||!data.prime){
 		res.send({error:"Create Order Error: Wrong Data Format"});
 		return;
 	}
-	*/
 	let accessToken=req.get("Authorization");
 	if(accessToken){
 		accessToken=accessToken.replace("Bearer ", "");
 	}
-	// Get info from facebook
-	getFacebookProfile(accessToken).then(function(profile){
-		res.send(profile);
-		/*
+	// Get user profile from database
+	getUserProfile(accessToken).then(function(profile){
 		let now=new Date();
-		let id=now.getMonth()+""+now.getDate()+""+(now.getTime()%(24*60*60*1000))+""+Math.floor(Math.random()*10);
-		let orderData={
-			id:id,
-			order:data.order,
+		let number=now.getMonth()+""+now.getDate()+""+(now.getTime()%(24*60*60*1000))+""+Math.floor(Math.random()*10);
+		let orderRecord={
+			number:number,
 			time:now.getTime(),
-			status:-1 // -1 for init (not pay yet)
+			status:-1, // -1 for init (not pay yet)
+			details:data.order
 		};
 		if(profile!==null&&profile.id){
-			orderData.fbid=profile.id;
+			orderRecord.userId=profile.id;
 		}
-		db.ref("/orders/"+id).set(orderData, function(error){
+		let query="insert into order_table set ?";
+		mysqlCon.query(query, orderRecord, function(error, results, fields){
 			if(error){
 				res.send({error:"Create Order Error"});
+				return;
 			}else{
+				let orderId=results.insertId;
 				// start payment
-				let partnerKey="partner_PHgswvYEk4QY6oy3n8X3CwiQCVQmv91ZcFoD5VrkGFXo8N7BFiLUxzeG";
 				request({
 					url:"https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime",
 					method:"POST",
 					headers:{
 						"Content-Type":"application/json",
-						"x-api-key":partnerKey
+						"x-api-key":TAPPAY_PARTNER_KEY
 					},
 					json:{
 						"prime": data.prime,
-						"partner_key": partnerKey,
+						"partner_key": TAPPAY_PARTNER_KEY,
 						"merchant_id": "AppWorksSchool_CTBC",
 						"details": "Stylish Payment",
 						"amount": data.order.total,
@@ -689,39 +707,81 @@ app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
 					}
 				}, function(error, response, body){
 					if(body.status===0){ // OK
-						db.ref("/orders/"+id).update({
-							payment:body,
-							status:0
-						}, function(error){
-							res.send({number:id});
+						let payment={
+							order_id:orderId,
+							details:body
+						};
+						createPayment(payment, function(result){
+							if(true){
+								res.send({data:{number:orderRecord.number}});
+							}else{
+								res.send({error:"Create Payment Error"});
+							}
 						});
 					}else{
-						res.send({error:"Payment Error: "+body.msg});
+						res.send({error:"Payment Failed: "+body.msg});
 					}
 				});
 			}
 		});
-		*/
 	}).catch(function(error){
 		res.send({error:error});
 	});
 });
-	let getFacebookProfile=function(accessToken){
+	let getUserProfile=function(accessToken){
 		return new Promise((resolve, reject)=>{
 			if(!accessToken){
 				resolve(null);
 				return;
 			}
-			request({
-				url:"https://graph.facebook.com/me?fields=id,name,email&access_token="+accessToken,
-				method:"GET"
-			}, function(error, response, body){
-				body=JSON.parse(body);
-				if(body.error){
-					reject(body.error);
+			mysqlCon.query("select * from user where access_token = ?", [accessToken], function(error, results, fields){
+				if(error){
+					resolve({error:"Database Query Error"});
 				}else{
-					resolve(body);
+					if(results.length===0){
+						resolve({error:"Invalid Access Token"});
+					}else{
+						resolve({
+							id:results[0].id,
+							provider:results[0].provider,
+							name:results[0].name,
+							email:results[0].email,
+							picture:results[0].picture
+						});
+					}
 				}
+			});
+		});
+	};
+	let createPayment=function(payment, callback){
+		mysqlCon.beginTransaction(function(error){
+			if(error){
+				throw error;
+			}
+			mysqlCon.query("insert into payment set ?", payment, function(error, results, fields){
+				if(error){
+					callback(false);
+					return mysqlCon.rollback(function(){
+						throw error;
+					});
+				}
+				mysqlCon.query("update order_table set status = ?", [0], function(error, results, fields){
+					if(error){
+						callback(false);
+						return mysqlCon.rollback(function(){
+							throw error;
+						});
+					}
+					mysqlCon.commit(function(error){
+						if(error){
+							callback(false);
+							return mysqlCon.rollback(function(){
+								throw error;
+							});
+						}
+						callback(true);
+					});
+				});					
 			});
 		});
 	};
