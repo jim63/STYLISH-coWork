@@ -476,6 +476,9 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 				}
 				let user;
 				let now=Date.now();
+				let sha=crypto.createHash("sha256");
+				sha.update(data.email+data.password+now);
+				let accessToken=sha.digest("hex");
 				let commitCallback=function(error){
 					if(error){
 						res.send({error:"Database Query Error"});
@@ -509,7 +512,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 						email:results[0].email,
 						name:results[0].name,
 						picture:results[0].picture,
-						access_token:results[0].access_token,
+						access_token:accessToken,
 						access_expired:now+(30*24*60*60*1000) // 30 days
 					};
 					let query="update user set access_token = ?, access_expired = ? where id = ?";
