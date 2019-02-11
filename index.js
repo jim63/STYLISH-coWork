@@ -288,7 +288,7 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 		case "all":
 			listProducts(null, size, paging, listCallback);
 			break;
-		case "boys": case "girls": case "accessories":
+		case "men": case "women": case "accessories":
 			listProducts({
 				category:category
 			}, size, paging, listCallback);
