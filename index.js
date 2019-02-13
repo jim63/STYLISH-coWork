@@ -26,7 +26,7 @@ const express=require("express");
 const bodyparser=require("body-parser");
 const multer=require("multer");
 const app=express();
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({extended:true}));
 app.listen(80, function(){
