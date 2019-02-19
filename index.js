@@ -43,7 +43,7 @@ app.use("/api/", function(req, res, next){
 app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 	let upload=multer({dest:"./tmp"}).fields([
 		{name:"main_image", maxCount:1},
-		{name:"other_image", maxCount:3}
+		{name:"other_images", maxCount:3}
 	]);	
 	upload(req, res, function(error){
 		if(error){
