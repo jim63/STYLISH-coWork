@@ -73,7 +73,7 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 				}
 				mysqlCon.query("insert into product set ?", product, function(error, results, fields){
 					if(error){
-						res.send({error:"Database Query Error"});
+						res.send({error:"Database Query Error: "+erorr});
 						return mysqlCon.rollback(function(){
 							throw error;
 						});
@@ -89,22 +89,22 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 					}
 					mysqlCon.query("insert into variant(color_code,color_name,size,stock,product_id) values ?", [variants], function(error, results, fields){
 						if(error){
-							res.send({error:"Database Query Error"});
+							res.send({error:"Database Query Error: "+erorr});
 							return mysqlCon.rollback(function(){
 								throw error;
 							});
 						}
 						mysqlCon.commit(function(error){
 							if(error){
-								res.send({error:"Database Query Error"});
+								res.send({error:"Database Query Error: "+erorr});
 								return mysqlCon.rollback(function(){
 									throw error;
 								});
 							}
 							fs.mkdirSync("./public/assets/"+productId);
 							fs.renameSync(req.files["main_image"][0].path, "./public/assets/"+productId+"/main.jpg");
-							for(let i=0;i<req.files["other_image"].length;i++){
-								fs.renameSync(req.files["other_image"][i].path, "./public/assets/"+productId+"/"+i+".jpg");
+							for(let i=0;i<req.files["other_images"].length;i++){
+								fs.renameSync(req.files["other_images"][i].path, "./public/assets/"+productId+"/"+i+".jpg");
 							}
 							res.send({status:"OK"});
 						});
