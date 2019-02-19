@@ -1,3 +1,4 @@
+const STYLISH_HOME="/srv/www/stylish-backend";
 const PROTOCOL="http://";
 const HOST_NAME="18.214.165.31";
 const API_VERSION="1.0";
@@ -26,7 +27,7 @@ const express=require("express");
 const bodyparser=require("body-parser");
 const multer=require("multer");
 const app=express();
-app.use(express.static("/srv/www/stylish-backend/public"));
+app.use(express.static(STYLISH_HOME+"/public"));
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({extended:true}));
 app.listen(80, function(){
@@ -101,10 +102,10 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 									throw error;
 								});
 							}
-							fs.mkdirSync("./public/assets/"+productId);
-							fs.renameSync(req.files["main_image"][0].path, "./public/assets/"+productId+"/main.jpg");
+							fs.mkdirSync(STYLISH_HOME+"/public/assets/"+productId);
+							fs.renameSync(req.files["main_image"][0].path, STYLISH_HOME+"/public/assets/"+productId+"/main.jpg");
 							for(let i=0;i<req.files["other_images"].length;i++){
-								fs.renameSync(req.files["other_images"][i].path, "./public/assets/"+productId+"/"+i+".jpg");
+								fs.renameSync(req.files["other_images"][i].path, STYLISH_HOME+"/public/assets/"+productId+"/"+i+".jpg");
 							}
 							res.send({status:"OK"});
 						});
