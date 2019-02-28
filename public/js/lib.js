@@ -1,17 +1,11 @@
-// initialize firebase
-firebase.initializeApp({
-	apiKey: "AIzaSyB8bXw1Xco2dzjTwI1RvjJsMalLXtr8gYo",
-	projectId: "appworks-school-stylish",
-	storageBucket: "appworks-school-stylish.appspot.com"
-});
 // initialize app structure
 let app={
-	storage:firebase.storage(), fb:{},
+	fb:{},
 	state:{
 		cart:null, auth:null
 	}, evts:{}, cart:{},
 	cst:{
-		API_HOST:"https://appworks-school-stylish.firebaseapp.com"
+		API_HOST:"http://18.214.165.31/api/1.0"
 	}
 };
 // core operations
@@ -228,19 +222,22 @@ app.cart.show=function(){
 };
 app.cart.add=function(product, variant, qty){
 	let list=app.state.cart.list;
-	let key=product.id+"-"+variant.size+"-"+variant.color;
+	let color=product.colors.find((item)=>{
+		return item.code===variant.color_code;
+	});
 	let item=list.find((item)=>{
-		return item.id===product.id&&item.size===variant.size&&item.color===variant.color;
+		return item.id===product.id&&item.size===variant.size&&item.color.code===color.code;
 	});
 	if(item){
 		item.qty=qty;
 	}else{
 		list.push({
 			id:product.id,
-			name:product.name,
+			title:product.title,
 			price:product.price,
+			main_image:product.main_image,
 			size:variant.size,
-			color:variant.color,
+			color:color,
 			qty:qty, stock:variant.stock
 		});
 	}

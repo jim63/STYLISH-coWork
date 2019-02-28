@@ -58,20 +58,25 @@ header>.feature>.item{
 	display:block;flex:auto;cursor:pointer;
 }
 header>.feature>.cart{
-	width:44px;height:44px;line-height:50px;text-align:center;color:#8b572a;font-weight:bold;
+	width:44px;height:44px;
 	background-image:url("../imgs/cart.png");
 	background-repeat:no-repeat;
 	background-size:44px 44px;
 	background-position:center center;
 }
+header>.feature>.cart>.qty{
+	text-align:center;background-color:#8b572a;font-weight:bold;
+	border-radius:50%;color:#ffffff;opacity:0.8;font-size:0.8em;
+	width:24px;height:24px;line-height:24px;margin-left:20px;margin-top:20px;
+}
 header>.feature input.search{
 	width:130px;margin-right:20px;
-	padding:8px 10px;padding-right:40px;
-	border:1px solid #979797;border-radius:15px;
+	padding:10px;padding-right:40px;
+	border:1px solid #979797;border-radius:20px;
 	background-image:url("../imgs/search.png");
 	background-repeat:no-repeat;
-	background-size:30px 30px;
-	background-position:95% center;
+	background-size:40px 40px;
+	background-position:98% center;
 }
 /* nav.mobile */
 nav.mobile{
@@ -110,12 +115,17 @@ div.padding-header-mobile{
 }
 .feature-mobile>.item>.cart{
 	display:inline-block;vertical-align:middle;
-	width:40px;height:40px;line-height:45px;text-align:center;color:#ffffff;font-weight:bold;font-size:0.8em;
+	width:40px;height:40px;line-height:45px;
 	background-image:url("../imgs/cart-mobile.png");
 	background-repeat:no-repeat;
 	background-size:40px 40px;
 	background-position:center center;
 	transform:translate(0px,-2px)
+}
+.feature-mobile>.item>.cart>.qty{
+	text-align:center;background-color:#8b572a;font-weight:bold;
+	border-radius:50%;color:#ffffff;opacity:0.8;font-size:0.7em;
+	width:24px;height:24px;line-height:24px;margin-left:18px;margin-top:18px;
 }
 .feature-mobile>.item>img{
 	width:40px;height:40px;transform:translate(0px,-2px)
@@ -178,7 +188,7 @@ footer>.view{
 	display:flex;align-items:center;justify-content:center;
 }
 footer .link{
-	flex:auto;display:flex;align-items:center;
+	flex:none;display:flex;align-items:center;
 }
 footer .link>.item{
 	flex:none;width:100px;text-align:center;
@@ -187,7 +197,7 @@ footer .link>.item{
 footer .link>.item:hover{
 	color:#c49871
 }
-footer .link>.item:last-child{
+footer .link-1>.item:last-child{
 	border-right-width:0px;
 }
 footer .social{

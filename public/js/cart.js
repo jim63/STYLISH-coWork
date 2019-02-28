@@ -73,14 +73,14 @@ app.checkout=function(prime){
 		data.access_token=app.state.auth.accessToken;
 	}
 	app.showLoading();
-	app.ajax("post", app.cst.API_HOST+"/exe/order/checkout", data, function(req){
+	app.ajax("post", app.cst.API_HOST+"/order/checkout", data, function(req){
 		app.closeLoading();
 		let result=JSON.parse(req.responseText);
 		if(result.error){
 			alert("交易失敗，請再試一次："+result.error);
 		}else{
 			app.cart.clear();
-			window.location="./thankyou.html?number="+result.number;
+			window.location="./thankyou.html?number="+result.data.number;
 		}
 	});
 };
@@ -107,13 +107,11 @@ app.showCart=function(){
 				className:"picture"
 			}}, variant);
 			app.createElement("div", {atrs:{
-				className:"details", innerHTML:data.name+"<br/>"+data.id+"<br/><br/>顏色："+data.color.name+"<br/>尺寸："+data.size
+				className:"details", innerHTML:data.title+"<br/>"+data.id+"<br/><br/>顏色："+data.color.name+"<br/>尺寸："+data.size
 			}}, variant);
-			app.storage.ref(data.id+"/main.jpg").getDownloadURL().then((url)=>{
-				app.createElement("img", {atrs:{
-					src:url
-				}}, picture);
-			});
+			app.createElement("img", {atrs:{
+				src:data.main_image
+			}}, picture);
 			// qty
 			let qty=app.createElement("div", {atrs:{
 				className:"qty"

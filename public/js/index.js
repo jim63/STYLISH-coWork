@@ -18,16 +18,14 @@ app.init=function(){
 		let rect=document.body.getBoundingClientRect();
 		let x=rect.bottom-window.innerHeight;
 		if(x<100){
-			if(app.state.product.page<app.state.product.maxPage){
-				let page=app.state.product.page+1;
-				app.state.product=null;
-				app.getProducts(app.state.tag, page);
+			if(app.state.product.paging!==undefined){
+				app.getProducts(app.state.tag, app.state.product.paging);
 			}
 		}
 	};
 // keyvisuals
 app.getKeyvisuals=function(){
-	app.ajax("get", app.cst.API_HOST+"/exe/keyvisual/list", "", function(req){
+	app.ajax("get", app.cst.API_HOST+"/marketing/campaigns", "", function(req){
 		app.state.keyvisual=JSON.parse(req.responseText);
 		app.state.keyvisual.step=0;
 		app.state.keyvisual.total=app.state.keyvisual.data.length;
@@ -49,15 +47,13 @@ app.showKeyvisual=function(keyvisual){
 		// create visual
 		let visual=app.createElement("a", {atrs:{
 			className:"visual"+(index===0?" current":""), href:item.link
+		}, stys:{
+			backgroundImage:"url("+item.picture+")"
 		}});
 		app.createElement("div", {atrs:{
-			className:"story", innerHTML:item.story
+			className:"story", innerHTML:item.story.replace(/\r\n/g, "<br/>")
 		}}, visual);
 		container.insertBefore(visual, step);
-		// Download background image
-		app.storage.ref(item.img).getDownloadURL().then((src)=>{
-			visual.style.backgroundImage="url("+src+")";
-		});
 	});
 	app.state.keyvisual.animeId=window.setInterval(app.evts.nextKeyvisual, 5000);
 };
@@ -82,10 +78,25 @@ app.showKeyvisual=function(keyvisual){
 		app.get("#keyvisual>.step>.circle:nth-child("+(keyvisual.step+1)+")").classList.add("current");
 	};
 // products
-app.getProducts=function(tag, page){
-	app.ajax("get", app.cst.API_HOST+"/exe/product/list", "page="+page+(tag===null?"":"&tag="+encodeURIComponent(tag)), function(req){
+app.getProducts=function(tag, paging){
+	let path;
+	let keyword;
+	if(tag===null){
+		path="/all";
+	}else if(tag==="women"){
+		path="/women";
+	}else if(tag==="men"){
+		path="/men";
+	}else if(tag==="accessories"){
+		path="/accessories";
+	}else{
+		path="/search";
+		keyword=tag;
+	}
+	app.state.product=null;
+	app.ajax("get", app.cst.API_HOST+"/products"+path, "paging="+paging+(keyword?"&keyword="+encodeURIComponent(tag):""), function(req){
 		app.state.product=JSON.parse(req.responseText);
-		app.showProducts(app.state.product.list);
+		app.showProducts(app.state.product.data);
 	});
 };
 app.showProducts=function(data){
@@ -100,19 +111,14 @@ app.showProducts=function(data){
 			let productContainer=app.createElement("a", {atrs:{
 				className:"product", href:"product.html?id="+product.id
 			}}, container);
-			app.storage.ref(product.id+"/main.jpg").getDownloadURL().then((url)=>{
-				product.imgs={
-					mainSrc:url
-				};
-				app.showProduct(product, productContainer);
-			});
+			app.showProduct(product, productContainer);
 		}
 	}
 };
 	app.showProduct=function(product, container){
 		// main Image
 		app.createElement("img", {atrs:{
-			src:product.imgs.mainSrc
+			src:product.main_image
 		}}, container);
 		// colors
 		let colorsContainer=app.createElement("div", {atrs:{
@@ -128,7 +134,7 @@ app.showProducts=function(data){
 		}
 		// name and price
 		app.createElement("div", {atrs:{
-			className:"name", textContent:product.name
+			className:"name", textContent:product.title
 		}}, container);
 		app.createElement("div", {atrs:{
 			className:"price", textContent:"TWD."+product.price

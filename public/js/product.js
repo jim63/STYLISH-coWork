@@ -16,9 +16,10 @@ app.init=function(){
 	});
 };
 app.getProduct=function(id){
-	app.ajax("get", app.cst.API_HOST+"/exe/product/get", "id="+id, function(req){
+	app.ajax("get", app.cst.API_HOST+"/products/details", "id="+id, function(req){
 		let data=JSON.parse(req.responseText).data;
 		let variant;
+		// find first chosen variant available
 		for(let key in data.variants){
 			variant=data.variants[key];
 			if(variant.stock>0){
@@ -36,21 +37,19 @@ app.getProduct=function(id){
 };
 app.showProduct=function(){
 	let product=app.state.product;
-	app.get("#product-name").textContent=product.name;
+	app.get("#product-name").textContent=product.title;
 	app.get("#product-id").textContent=product.id;
 	app.get("#product-price").textContent="TWD."+product.price;
-	app.get("#product-summary").innerHTML=product.summary;
-	app.storage.ref(product.id+"/main.jpg").getDownloadURL().then((url)=>{
-		app.createElement("img", {atrs:{
-			src:url
-		}}, app.get("#product-main-image"));
-	});
+	app.get("#product-summary").innerHTML=product.note+"<br/><br/>"+product.texture+"<br/>"+product.description.replace(/\r\n/g, "<br/>")+"<br/><br/>清洗："+product.wash+"<br/>產地："+product.place;
+	app.createElement("img", {atrs:{
+		src:product.main_image
+	}}, app.get("#product-main-image"));
 	// colors
 	let colorContainer=app.get("#product-colors");
-	for(let key in product.colors){
-		let color=product.colors[key];
+	for(let i=0;i<product.colors.length;i++){
+		let color=product.colors[i];
 		app.createElement("div", {atrs:{
-			className:"color"+(app.state.variant.color.code===color.code?" current":""),
+			className:"color"+(app.state.variant.color_code===color.code?" current":""),
 			value:color
 		}, stys:{
 			backgroundColor:"#"+color.code
@@ -60,8 +59,9 @@ app.showProduct=function(){
 	}
 	// sizes
 	let sizeContainer=app.get("#product-sizes");
-	product.sizes.split(",").forEach((size)=>{
-		let outStock=product.variants[size+"-"+app.state.variant.color.code].stock===0;
+	product.sizes.forEach((size)=>{
+		let variant=app.findVariant(app.state.variant.color_code, size);
+		let outStock=variant.stock===0;
 		app.createElement("div", {atrs:{
 			className:"size"+(app.state.variant.size===size?" current":"")+(outStock?" disabled":""),
 			textContent:size,
@@ -79,20 +79,22 @@ app.showProduct=function(){
 	// story
 	app.get("#product-story").innerHTML=product.story;
 	// images
-	for(let i=0;i<2;i++){
-		app.storage.ref(product.id+"/"+i+".jpg").getDownloadURL().then((url)=>{
-			app.createElement("img", {atrs:{
-				src:url
-			}}, app.get("#product-images"));
-		});
+	for(let i=0;i<2&&i<product.images.length;i++){
+		app.createElement("img", {atrs:{
+			src:product.images[i]
+		}}, app.get("#product-images"));
 	}
+};
+app.findVariant=function(colorCode, size){
+	let product=app.state.product;
+	return product.variants.find((item)=>{return item.color_code===colorCode&&item.size===size});
 };
 app.refreshProductVariants=function(){
 	let variants=app.state.product.variants;
 	let variant=app.state.variant;
 	let colors=app.getAll("#product-colors>.color");
 	for(let i=0;i<colors.length;i++){
-		if(colors[i].value.code===variant.color.code){
+		if(colors[i].value.code===variant.color_code){
 			colors[i].classList.add("current");
 		}else{
 			colors[i].classList.remove("current");
@@ -107,7 +109,7 @@ app.refreshProductVariants=function(){
 		}else{
 			sizes[i].classList.remove("current");
 		}
-		outStock=variants[sizes[i].value+"-"+variant.color.code].stock===0;
+		outStock=app.findVariant(variant.color_code, sizes[i].value).stock===0;
 		// control disabled
 		if(outStock){
 			sizes[i].classList.add("disabled");
@@ -120,12 +122,14 @@ app.refreshProductVariants=function(){
 	app.evts.clickColor=function(e){
 		let color=e.currentTarget.value;
 		let variants=app.state.product.variants;
-		app.state.variant=variants[app.state.variant.size+"-"+color.code];
+		app.state.variant=app.findVariant(color.code, app.state.variant.size);
 		if(app.state.variant.stock===0){ // out of stock, choose another size automatically
-			let sizes=app.state.product.sizes.split(",");
+			let sizes=app.state.product.sizes;
+			let variant;
 			for(let i=0;i<sizes.length;i++){
-				if(variants[sizes[i]+"-"+color.code].stock>0){
-					app.state.variant=variants[sizes[i]+"-"+color.code];
+				variant=app.findVariant(color.code, sizes[i]);
+				if(variant.stock>0){
+					app.state.variant=variant;
 					break;
 				}
 			}
@@ -139,7 +143,7 @@ app.refreshProductVariants=function(){
 		}
 		let size=e.currentTarget.value;
 		let variants=app.state.product.variants;
-		app.state.variant=variants[size+"-"+app.state.variant.color.code];
+		app.state.variant=app.findVariant(app.state.variant.color_code, size);
 		app.state.qty=1;
 		app.refreshProductVariants();
 	};
@@ -147,7 +151,7 @@ app.refreshProductVariants=function(){
 		let value=parseInt(e.currentTarget.getAttribute("data-value"));
 		let qty=app.state.qty;
 		qty=qty+value;
-		if(qty>0&&qty<app.state.variant.stock){
+		if(qty>0&&qty<=app.state.variant.stock){
 			app.state.qty=qty;
 			app.get("#product-qty>.value").textContent=app.state.qty;
 		}
