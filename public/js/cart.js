@@ -69,11 +69,12 @@ app.checkout=function(prime){
 		prime:prime,
 		order:app.state.cart
 	};
+	let headers={};
 	if(app.state.auth!==null){
-		data.access_token=app.state.auth.accessToken;
+		headers["Authorization"]="Bearer "+app.state.auth.accessToken;
 	}
 	app.showLoading();
-	app.ajax("post", app.cst.API_HOST+"/order/checkout", data, function(req){
+	app.ajax("post", app.cst.API_HOST+"/order/checkout", data, headers, function(req){
 		app.closeLoading();
 		let result=JSON.parse(req.responseText);
 		if(result.error){

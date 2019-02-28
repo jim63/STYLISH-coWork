@@ -62,23 +62,30 @@ app.setEventHandlers=function(obj,eventHandlers,useCapture){
 	}
 	return obj;
 };
-app.ajax=function(method, src, args, callback){
+app.ajax=function(method, src, args, headers, callback){
 	let req=new XMLHttpRequest();
 	if(method.toLowerCase()==="post"){ // post through json args
 		req.open(method, src);
 		req.setRequestHeader("Content-Type", "application/json");
+		app.setRequestHeaders(req, headers);
 		req.onload=function(){
 			callback(this);
 		};
 		req.send(JSON.stringify(args));
 	}else{ // get through http args
 		req.open(method, src+"?"+args);
+		app.setRequestHeaders(req, headers);
 		req.onload=function(){
 			callback(this);
 		};
 		req.send();
 	}
 };
+	app.setRequestHeaders=function(req, headers){
+		for(let key in headers){
+			req.setRequestHeader(key, headers[key]);
+		}
+	};
 app.getParameter=function(name){
     let result=null, tmp=[];
     window.location.search.substring(1).split("&").forEach(function(item){
@@ -147,12 +154,20 @@ app.fb.login=function(){
 app.fb.loginStatusChange=function(response){
 	if(response.status==="connected"){
 		app.state.auth=response.authResponse;
+		app.fb.updateLoginToServer();
 	}else{
 		app.state.auth=null;
 	}
 	if(typeof app.fb.statusChangeCallback==="function"){
 		app.fb.statusChangeCallback();
 	}
+};
+app.fb.updateLoginToServer=function(){
+	let data={
+		provider:"facebook",
+		access_token:app.state.auth.accessToken
+	}
+	app.ajax("post", app.cst.API_HOST+"/user/signin", data, {}, function(req){});
 };
 app.fb.clickProfile=function(){
 	if(app.state.auth===null){
