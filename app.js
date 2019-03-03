@@ -1,6 +1,6 @@
 const STYLISH_HOME="/srv/www/stylish-backend";
-const PROTOCOL="http://";
-const HOST_NAME="18.214.165.31";
+const PROTOCOL="https://";
+const HOST_NAME="api.appworks-school.tw";
 const API_VERSION="1.0";
 const TAPPAY_PARTNER_KEY="partner_PHgswvYEk4QY6oy3n8X3CwiQCVQmv91ZcFoD5VrkGFXo8N7BFiLUxzeG";
 // Utilities
