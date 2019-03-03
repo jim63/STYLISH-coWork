@@ -5,7 +5,7 @@ let app={
 		cart:null, auth:null
 	}, evts:{}, cart:{},
 	cst:{
-		API_HOST:"http://18.214.165.31/api/1.0"
+		API_HOST:"https://api.appworks-school.tw/api/1.0"
 	}
 };
 // core operations
