@@ -46,7 +46,7 @@ app.showKeyvisual=function(keyvisual){
 		}}, step);
 		// create visual
 		let visual=app.createElement("a", {atrs:{
-			className:"visual"+(index===0?" current":""), href:item.link
+			className:"visual"+(index===0?" current":""), href:"./product.html?id="+item.product_id
 		}, stys:{
 			backgroundImage:"url("+item.picture+")"
 		}});
