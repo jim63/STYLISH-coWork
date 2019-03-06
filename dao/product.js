@@ -1,5 +1,5 @@
 // MySQL Initialization
-const mysql=require("./mysql-con.js");
+const mysql=require("../mysqlcon.js");
 // Build DAO Object
 module.exports={
 	insert:function(req){

@@ -4,7 +4,7 @@ const crypto=require("crypto");
 const fs=require("fs");
 const request=require("request");
 // MySQL Initialization
-const mysql=require("./mysql-con.js");
+const mysql=require("./mysqlcon.js");
 // Database Access Object
 const dao={
 	product:require("./dao/product.js")
