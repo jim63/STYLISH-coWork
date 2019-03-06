@@ -8,20 +8,7 @@ const crypto=require("crypto");
 const fs=require("fs");
 const request=require("request");
 // MySQL Initialization
-const mysql=require("mysql");
-const mysqlCon=mysql.createConnection({
-	host:"localhost",
-	user:"root",
-	password:"123456",
-	database:"stylish"
-});
-mysqlCon.connect(function(err){
-	if(err){
-		throw err;
-	}else{
-		console.log("Connected!");
-	}
-});
+mysql=require("./mysql-con.js")
 // Express Initialization
 const express=require("express");
 const bodyparser=require("body-parser");
@@ -55,7 +42,7 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 			let colorCodes=req.body.color_codes.split(",");
 			let colorNames=req.body.color_names.split(",");
 			let sizes=req.body.sizes.split(",");
-			mysqlCon.beginTransaction(function(error){
+			mysql.con.beginTransaction(function(error){
 				if(error){
 					res.send({error:"Database Query Error"});
 					throw error;
@@ -74,10 +61,10 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 				if(req.body.id){
 					product.id=req.body.id;
 				}
-				mysqlCon.query("insert into product set ?", product, function(error, results, fields){
+				mysql.con.query("insert into product set ?", product, function(error, results, fields){
 					if(error){
 						res.send({error:"Database Query Error: "+erorr});
-						return mysqlCon.rollback(function(){
+						return mysql.con.rollback(function(){
 							throw error;
 						});
 					}
@@ -90,17 +77,17 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 							]);
 						}
 					}
-					mysqlCon.query("insert into variant(color_code,color_name,size,stock,product_id) values ?", [variants], function(error, results, fields){
+					mysql.con.query("insert into variant(color_code,color_name,size,stock,product_id) values ?", [variants], function(error, results, fields){
 						if(error){
 							res.send({error:"Database Query Error: "+erorr});
-							return mysqlCon.rollback(function(){
+							return mysql.con.rollback(function(){
 								throw error;
 							});
 						}
-						mysqlCon.commit(function(error){
+						mysql.con.commit(function(error){
 							if(error){
 								res.send({error:"Database Query Error: "+erorr});
-								return mysqlCon.rollback(function(){
+								return mysql.con.rollback(function(){
 									throw error;
 								});
 							}
@@ -123,7 +110,7 @@ app.post("/api/"+API_VERSION+"/admin/campaign", function(req, res){
 		picture:req.body.picture,
 		story:req.body.story
 	};
-	mysqlCon.query("insert into campaign set ?", campaign, function(error, results, fields){
+	mysql.con.query("insert into campaign set ?", campaign, function(error, results, fields){
 		if(error){
 			res.send({error:"Add Campaign Error"});
 		}else{
@@ -134,17 +121,17 @@ app.post("/api/"+API_VERSION+"/admin/campaign", function(req, res){
 app.post("/api/"+API_VERSION+"/admin/hot", function(req, res){
 	let title=req.body.title;
 	let productIds=req.body.product_ids.split(",");
-	mysqlCon.beginTransaction(function(error){
+	mysql.con.beginTransaction(function(error){
 		if(error){
 			throw error;
 		}
 		let hot={
 			title:title,
 		};
-		mysqlCon.query("insert into hot set ?", hot, function(error, results, fields){
+		mysql.con.query("insert into hot set ?", hot, function(error, results, fields){
 			if(error){
 				res.send({error:"Database Query Error"});
-				return mysqlCon.rollback(function(){
+				return mysql.con.rollback(function(){
 					throw error;
 				});
 			}
@@ -155,17 +142,17 @@ app.post("/api/"+API_VERSION+"/admin/hot", function(req, res){
 					hotId, parseInt(productIds[i])
 				]);
 			}
-			mysqlCon.query("insert into hot_product(hot_id,product_id) values ?", [hotProductMapping], function(error, results, fields){
+			mysql.con.query("insert into hot_product(hot_id,product_id) values ?", [hotProductMapping], function(error, results, fields){
 				if(error){
 					res.send({error:"Database Query Error"});
-					return mysqlCon.rollback(function(){
+					return mysql.con.rollback(function(){
 						throw error;
 					});
 				}
-				mysqlCon.commit(function(error){
+				mysql.con.commit(function(error){
 					if(error){
 						res.send({error:"Database Query Error"});
-						return mysqlCon.rollback(function(){
+						return mysql.con.rollback(function(){
 							throw error;
 						});
 					}
@@ -178,7 +165,7 @@ app.post("/api/"+API_VERSION+"/admin/hot", function(req, res){
 // Marketing Campaign API for Front-End
 app.get("/api/"+API_VERSION+"/marketing/campaigns", function(req, res){
 	let query="select * from campaign order by id";
-	mysqlCon.query(query, function(error, results, fields){
+	mysql.con.query(query, function(error, results, fields){
 		if(error){
 			res.send({error:"Database Query Error"});
 		}else{
@@ -189,7 +176,7 @@ app.get("/api/"+API_VERSION+"/marketing/campaigns", function(req, res){
 // Marketing Hots API for Apps
 app.get("/api/"+API_VERSION+"/marketing/hots", function(req, res){
 	let query="select hot.title as title,hot_product.product_id as product_id from hot,hot_product where hot.id=hot_product.hot_id order by hot.id";
-	mysqlCon.query(query, function(error, results, fields){
+	mysql.con.query(query, function(error, results, fields){
 		if(error){
 			res.send({error:"Database Query Error"});
 		}else{
@@ -225,7 +212,7 @@ app.get("/api/"+API_VERSION+"/products/details", function(req, res){
 		return;
 	}
 	let query="select * from product where id = ?";
-	mysqlCon.query(query, [productId], function(error, results, fields){
+	mysql.con.query(query, [productId], function(error, results, fields){
 		if(error){
 			callback({error:"Database Query Error"});
 		}else{
@@ -234,7 +221,7 @@ app.get("/api/"+API_VERSION+"/products/details", function(req, res){
 			}else{
 				let product=results[0];
 				query="select * from variant where product_id = ?";
-				mysqlCon.query(query, [product.id], function(error, results, fields){
+				mysql.con.query(query, [product.id], function(error, results, fields){
 					if(error){
 						res.send({error:"Database Query Error"});
 					}else{
@@ -316,13 +303,13 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 			if(filters.where){
 				filter=filters.where;
 			}else if(filters.keyword){
-				filter=" where title like "+mysqlCon.escape("%"+filters.keyword+"%");
+				filter=" where title like "+mysql.con.escape("%"+filters.keyword+"%");
 			}else if(filters.category){
-				filter=" where category="+mysqlCon.escape(filters.category);
+				filter=" where category="+mysql.con.escape(filters.category);
 			}
 		}
 		let query="select count(*) as total from product";
-		mysqlCon.query(query+filter, function(error, results, fields){
+		mysql.con.query(query+filter, function(error, results, fields){
 			if(error){
 				callback({error:"Database Query Error"});
 			}else{
@@ -332,7 +319,7 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 					body.paging=paging+1;
 				}
 				query="select * from product";
-				mysqlCon.query(query+filter+" limit ?,?", [offset,size], function(error, results, fields){
+				mysql.con.query(query+filter+" limit ?,?", [offset,size], function(error, results, fields){
 					if(error){
 						callback({error:"Database Query Error"});
 					}else{
@@ -344,7 +331,7 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 							query="select * from variant where product_id in ("+products.map((product)=>{
 								return product.id;
 							}).join(",")+")";
-							mysqlCon.query(query, function(error, results, fields){
+							mysql.con.query(query, function(error, results, fields){
 								if(error){
 									callback({error:"Database Query Error"});
 								}else{
@@ -399,14 +386,14 @@ app.post("/api/"+API_VERSION+"/user/signup", function(req, res){
 		res.send({error:"Request Error: name, email and password are required."});
 		return;
 	}
-	mysqlCon.beginTransaction(function(error){
+	mysql.con.beginTransaction(function(error){
 		if(error){
 			throw error;
 		}
-		mysqlCon.query("select * from user where email = ?", [data.email], function(error, results, fields){
+		mysql.con.query("select * from user where email = ?", [data.email], function(error, results, fields){
 			if(error){
 				res.send({error:"Database Query Error"});
-				return mysqlCon.rollback(function(){
+				return mysql.con.rollback(function(){
 					throw error;
 				});
 			}
@@ -417,7 +404,7 @@ app.post("/api/"+API_VERSION+"/user/signup", function(req, res){
 			let commitCallback=function(error){
 				if(error){
 					res.send({error:"Database Query Error"});
-					return mysqlCon.rollback(function(){
+					return mysql.con.rollback(function(){
 						throw error;
 					});
 				}
@@ -447,15 +434,15 @@ app.post("/api/"+API_VERSION+"/user/signup", function(req, res){
 				access_expired:now+(30*24*60*60*1000) // 30 days
 			};
 			let query="insert into user set ?";
-			mysqlCon.query(query, user, function(error, results, fields){
+			mysql.con.query(query, user, function(error, results, fields){
 				if(error){
 					res.send({error:"Database Query Error"});
-					return mysqlCon.rollback(function(){
+					return mysql.con.rollback(function(){
 						throw error;
 					});
 				}
 				user.id=results.insertId;
-				mysqlCon.commit(commitCallback);
+				mysql.con.commit(commitCallback);
 			});
 		});
 	});
@@ -467,14 +454,14 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 			res.send({error:"Request Error: email and password are required."});
 			return;
 		}
-		mysqlCon.beginTransaction(function(error){
+		mysql.con.beginTransaction(function(error){
 			if(error){
 				throw error;
 			}
-			mysqlCon.query("select * from user where email = ? and password = ?", [data.email,data.password], function(error, results, fields){
+			mysql.con.query("select * from user where email = ? and password = ?", [data.email,data.password], function(error, results, fields){
 				if(error){
 					res.send({error:"Database Query Error"});
-					return mysqlCon.rollback(function(){
+					return mysql.con.rollback(function(){
 						throw error;
 					});
 				}
@@ -486,7 +473,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 				let commitCallback=function(error){
 					if(error){
 						res.send({error:"Database Query Error"});
-						return mysqlCon.rollback(function(){
+						return mysql.con.rollback(function(){
 							throw error;
 						});
 					}
@@ -508,7 +495,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 				};
 				if(results.length===0){ // error
 					user=null;
-					mysqlCon.commit(commitCallback);
+					mysql.con.commit(commitCallback);
 				}else{ // update
 					user={
 						id:results[0].id,
@@ -520,14 +507,14 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 						access_expired:now+(30*24*60*60*1000) // 30 days
 					};
 					let query="update user set access_token = ?, access_expired = ? where id = ?";
-					mysqlCon.query(query, [user.access_token, user.access_expired, user.id], function(error, results, fields){
+					mysql.con.query(query, [user.access_token, user.access_expired, user.id], function(error, results, fields){
 						if(error){
 							res.send({error:"Database Query Error"});
-							return mysqlCon.rollback(function(){
+							return mysql.con.rollback(function(){
 								throw error;
 							});
 						}
-						mysqlCon.commit(commitCallback);
+						mysql.con.commit(commitCallback);
 					});
 				}
 			});
@@ -543,14 +530,14 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 				res.send({error:"Permissions Error: id, name, email are required."});
 				return;
 			}
-			mysqlCon.beginTransaction(function(error){
+			mysql.con.beginTransaction(function(error){
 				if(error){
 					throw error;
 				}
-				mysqlCon.query("select id from user where email = ? and provider = ?", [profile.email,data.provider], function(error, results, fields){
+				mysql.con.query("select id from user where email = ? and provider = ?", [profile.email,data.provider], function(error, results, fields){
 					if(error){
 						res.send({error:"Database Query Error"});
-						return mysqlCon.rollback(function(){
+						return mysql.con.rollback(function(){
 							throw error;
 						});
 					}
@@ -566,26 +553,26 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 					};
 					if(results.length===0){ // insert
 						query="insert into user set ?";
-						query=mysql.format(query, user);
+						query=mysql.core.format(query, user);
 					}else{ // update
 						user.id=results[0].id;
 						query="update user set name = ?, access_token = ?, access_expired = ? where email = ?";
-						query=mysql.format(query, [user.name, user.access_token, user.access_expired, user.email]);
+						query=mysql.core.format(query, [user.name, user.access_token, user.access_expired, user.email]);
 					}
-					mysqlCon.query(query, function(error, results, fields){
+					mysql.con.query(query, function(error, results, fields){
 						if(error){
 							res.send({error:"Database Query Error"});
-							return mysqlCon.rollback(function(){
+							return mysql.con.rollback(function(){
 								throw error;
 							});
 						}
 						if(!user.id){
 							user.id=results.insertId;
 						}
-						mysqlCon.commit(function(error){
+						mysql.con.commit(function(error){
 							if(error){
 								res.send({error:"Database Query Error"});
-								return mysqlCon.rollback(function(){
+								return mysql.con.rollback(function(){
 									throw error;
 								});
 							}
@@ -638,7 +625,7 @@ app.get("/api/"+API_VERSION+"/user/profile", function(req, res){
 		res.send({error:"Wrong Request: authorization is required."});
 		return;
 	}
-	mysqlCon.query("select * from user where access_token = ?", [accessToken], function(error, results, fields){
+	mysql.con.query("select * from user where access_token = ?", [accessToken], function(error, results, fields){
 		if(error){
 			res.send({error:"Database Query Error"});
 		}else{
@@ -681,7 +668,7 @@ app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
 			orderRecord.user_id=profile.id;
 		}
 		let query="insert into order_table set ?";
-		mysqlCon.query(query, orderRecord, function(error, results, fields){
+		mysql.con.query(query, orderRecord, function(error, results, fields){
 			if(error){
 				res.send({error:"Create Order Error"});
 				return;
@@ -737,7 +724,7 @@ app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
 				resolve(null);
 				return;
 			}
-			mysqlCon.query("select * from user where access_token = ?", [accessToken], function(error, results, fields){
+			mysql.con.query("select * from user where access_token = ?", [accessToken], function(error, results, fields){
 				if(error){
 					resolve({error:"Database Query Error"});
 				}else{
@@ -757,28 +744,28 @@ app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
 		});
 	};
 	let createPayment=function(payment, callback){
-		mysqlCon.beginTransaction(function(error){
+		mysql.con.beginTransaction(function(error){
 			if(error){
 				throw error;
 			}
-			mysqlCon.query("insert into payment set ?", payment, function(error, results, fields){
+			mysql.con.query("insert into payment set ?", payment, function(error, results, fields){
 				if(error){
 					callback(false);
-					return mysqlCon.rollback(function(){
+					return mysql.con.rollback(function(){
 						throw error;
 					});
 				}
-				mysqlCon.query("update order_table set status = ?", [0], function(error, results, fields){
+				mysql.con.query("update order_table set status = ?", [0], function(error, results, fields){
 					if(error){
 						callback(false);
-						return mysqlCon.rollback(function(){
+						return mysql.con.rollback(function(){
 							throw error;
 						});
 					}
-					mysqlCon.commit(function(error){
+					mysql.con.commit(function(error){
 						if(error){
 							callback(false);
-							return mysqlCon.rollback(function(){
+							return mysql.con.rollback(function(){
 								throw error;
 							});
 						}
