@@ -1,10 +1,10 @@
-const cst=require("./constants.js");
+const cst=require("./util/constants.js");
 // Utilities
 const crypto=require("crypto");
 const fs=require("fs");
 const request=require("request");
 // MySQL Initialization
-const mysql=require("./mysqlcon.js");
+const mysql=require("./util/mysqlcon.js");
 // Database Access Object
 const dao={
 	product:require("./dao/product.js")
