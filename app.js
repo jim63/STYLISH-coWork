@@ -192,87 +192,11 @@ app.get("/api/"+cst.API_VERSION+"/products/:category", function(req, res){
 	}
 });
 	function listProducts(filters, size, paging, callback){
-		let offset=paging*size;
-		let filter="";
-		if(filters!==null){
-			if(filters.where){
-				filter=filters.where;
-			}else if(filters.keyword){
-				filter=" where title like "+mysql.con.escape("%"+filters.keyword+"%");
-			}else if(filters.category){
-				filter=" where category="+mysql.con.escape(filters.category);
-			}
-		}
-		let query="select count(*) as total from product";
-		mysql.con.query(query+filter, function(error, results, fields){
-			if(error){
-				callback({error:"Database Query Error"});
-			}else{
-				let maxPage=Math.floor((results[0].total-1)/size);
-				let body={};
-				if(paging<maxPage){
-					body.paging=paging+1;
-				}
-				query="select * from product";
-				mysql.con.query(query+filter+" limit ?,?", [offset,size], function(error, results, fields){
-					if(error){
-						callback({error:"Database Query Error"});
-					}else{
-						if(results.length===0){
-							body.data=[];
-							callback(body);
-						}else{
-							let products=results;
-							query="select * from variant where product_id in ("+products.map((product)=>{
-								return product.id;
-							}).join(",")+")";
-							mysql.con.query(query, function(error, results, fields){
-								if(error){
-									callback({error:"Database Query Error"});
-								}else{
-									products.forEach((product)=>{
-										product.colors=[];
-										product.sizes=[];
-										product.variants=[];
-										product.main_image=cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/main.jpg";
-										product.images=[
-											cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/0.jpg",
-											cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/1.jpg",
-											cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/0.jpg",
-											cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/1.jpg"
-										];
-									});
-									let product, variant;
-									for(let i=0;i<results.length;i++){
-										variant=results[i];
-										product=products.find((product)=>{
-											return product.id===variant.product_id;
-										});
-										if(product.colors.findIndex((color)=>{
-											return color.code===variant.color_code
-										})===-1){
-											product.colors.push({
-												code:variant.color_code, name:variant.color_name
-											});
-										}
-										if(product.sizes.indexOf(variant.size)===-1){
-											product.sizes.push(variant.size);
-										}
-										product.variants.push({
-											color_code:variant.color_code,
-											size:variant.size,
-											stock:variant.stock
-										});
-									}
-									body.data=products;
-									callback(body);
-								}
-							});
-						}
-					}
-				});
-			}
-		});
+		dao.product.list(filters, size, paging).then(function(body){
+			callback(body);
+		}).catch(function(error){
+			callback({error:error});
+		});		
 	}
 // User API
 app.post("/api/"+cst.API_VERSION+"/user/signup", function(req, res){
