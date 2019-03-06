@@ -5,6 +5,10 @@ const fs=require("fs");
 const request=require("request");
 // MySQL Initialization
 const mysql=require("./mysql-con.js");
+// Database Access Object
+const dao={
+	product:require("./dao/product.js")
+};
 // Express Initialization
 const express=require("express");
 const bodyparser=require("body-parser");
@@ -31,67 +35,10 @@ app.post("/api/"+cst.API_VERSION+"/admin/product", function(req, res){
 		if(error){
 			res.send({error:"Upload Images Error"});
 		}else{
-			let colorCodes=req.body.color_codes.split(",");
-			let colorNames=req.body.color_names.split(",");
-			let sizes=req.body.sizes.split(",");
-			mysql.con.beginTransaction(function(error){
-				if(error){
-					res.send({error:"Database Query Error"});
-					throw error;
-				}
-				let product={
-					category:req.body.category,
-					title:req.body.title,
-					description:req.body.description,
-					price:req.body.price,
-					texture:req.body.texture,
-					wash:req.body.wash,
-					place:req.body.place,
-					note:req.body.note,
-					story:req.body.story
-				};
-				if(req.body.id){
-					product.id=req.body.id;
-				}
-				mysql.con.query("insert into product set ?", product, function(error, results, fields){
-					if(error){
-						res.send({error:"Database Query Error: "+erorr});
-						return mysql.con.rollback(function(){
-							throw error;
-						});
-					}
-					let productId=results.insertId;
-					let variants=[];
-					for(let i=0;i<colorCodes.length;i++){
-						for(let j=0;j<sizes.length;j++){
-							variants.push([
-								colorCodes[i], colorNames[i], sizes[j], Math.round(Math.random()*10), productId
-							]);
-						}
-					}
-					mysql.con.query("insert into variant(color_code,color_name,size,stock,product_id) values ?", [variants], function(error, results, fields){
-						if(error){
-							res.send({error:"Database Query Error: "+erorr});
-							return mysql.con.rollback(function(){
-								throw error;
-							});
-						}
-						mysql.con.commit(function(error){
-							if(error){
-								res.send({error:"Database Query Error: "+erorr});
-								return mysql.con.rollback(function(){
-									throw error;
-								});
-							}
-							fs.mkdirSync(cst.STYLISH_HOME+"/public/assets/"+productId);
-							fs.renameSync(req.files["main_image"][0].path, cst.STYLISH_HOME+"/public/assets/"+productId+"/main.jpg");
-							for(let i=0;i<req.files["other_images"].length;i++){
-								fs.renameSync(req.files["other_images"][i].path, cst.STYLISH_HOME+"/public/assets/"+productId+"/"+i+".jpg");
-							}
-							res.send({status:"OK"});
-						});
-					});					
-				});
+			dao.product.insert(req).then(function(message){
+				res.send({status:message});
+			}).catch(function(error){
+				res.send({error:error});
 			});
 		}
 	});
