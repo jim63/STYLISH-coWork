@@ -1,27 +1,19 @@
-const STYLISH_HOME="/srv/www/stylish-backend";
-const PROTOCOL="https://";
-const HOST_NAME="api.appworks-school.tw";
-const API_VERSION="1.0";
-const TAPPAY_PARTNER_KEY="partner_PHgswvYEk4QY6oy3n8X3CwiQCVQmv91ZcFoD5VrkGFXo8N7BFiLUxzeG";
+const cst=require("./constants.js");
 // Utilities
 const crypto=require("crypto");
 const fs=require("fs");
 const request=require("request");
 // MySQL Initialization
-mysql=require("./mysql-con.js")
+const mysql=require("./mysql-con.js");
 // Express Initialization
 const express=require("express");
 const bodyparser=require("body-parser");
 const multer=require("multer");
 const app=express();
-app.use(express.static(STYLISH_HOME+"/public"));
+app.use(express.static(cst.STYLISH_HOME+"/public"));
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({extended:true}));
-/*
-app.listen(80, function(){
-	console.log("Server Started");
-});
-*/
+// CORS Control
 app.use("/api/", function(req, res, next){
 	res.set("Access-Control-Allow-Origin", "*");
 	res.set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization");
@@ -30,7 +22,7 @@ app.use("/api/", function(req, res, next){
 	next();
 });
 // Admin API
-app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
+app.post("/api/"+cst.API_VERSION+"/admin/product", function(req, res){
 	let upload=multer({dest:"./tmp"}).fields([
 		{name:"main_image", maxCount:1},
 		{name:"other_images", maxCount:3}
@@ -91,10 +83,10 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 									throw error;
 								});
 							}
-							fs.mkdirSync(STYLISH_HOME+"/public/assets/"+productId);
-							fs.renameSync(req.files["main_image"][0].path, STYLISH_HOME+"/public/assets/"+productId+"/main.jpg");
+							fs.mkdirSync(cst.STYLISH_HOME+"/public/assets/"+productId);
+							fs.renameSync(req.files["main_image"][0].path, cst.STYLISH_HOME+"/public/assets/"+productId+"/main.jpg");
 							for(let i=0;i<req.files["other_images"].length;i++){
-								fs.renameSync(req.files["other_images"][i].path, STYLISH_HOME+"/public/assets/"+productId+"/"+i+".jpg");
+								fs.renameSync(req.files["other_images"][i].path, cst.STYLISH_HOME+"/public/assets/"+productId+"/"+i+".jpg");
 							}
 							res.send({status:"OK"});
 						});
@@ -104,7 +96,7 @@ app.post("/api/"+API_VERSION+"/admin/product", function(req, res){
 		}
 	});
 });
-app.post("/api/"+API_VERSION+"/admin/campaign", function(req, res){
+app.post("/api/"+cst.API_VERSION+"/admin/campaign", function(req, res){
 	let campaign={
 		product_id:parseInt(req.body.product_id),
 		picture:req.body.picture,
@@ -118,7 +110,7 @@ app.post("/api/"+API_VERSION+"/admin/campaign", function(req, res){
 		}
 	});
 });
-app.post("/api/"+API_VERSION+"/admin/hot", function(req, res){
+app.post("/api/"+cst.API_VERSION+"/admin/hot", function(req, res){
 	let title=req.body.title;
 	let productIds=req.body.product_ids.split(",");
 	mysql.con.beginTransaction(function(error){
@@ -163,7 +155,7 @@ app.post("/api/"+API_VERSION+"/admin/hot", function(req, res){
 	});
 });
 // Marketing Campaign API for Front-End
-app.get("/api/"+API_VERSION+"/marketing/campaigns", function(req, res){
+app.get("/api/"+cst.API_VERSION+"/marketing/campaigns", function(req, res){
 	let query="select * from campaign order by id";
 	mysql.con.query(query, function(error, results, fields){
 		if(error){
@@ -174,7 +166,7 @@ app.get("/api/"+API_VERSION+"/marketing/campaigns", function(req, res){
 	});
 });
 // Marketing Hots API for Apps
-app.get("/api/"+API_VERSION+"/marketing/hots", function(req, res){
+app.get("/api/"+cst.API_VERSION+"/marketing/hots", function(req, res){
 	let query="select hot.title as title,hot_product.product_id as product_id from hot,hot_product where hot.id=hot_product.hot_id order by hot.id";
 	mysql.con.query(query, function(error, results, fields){
 		if(error){
@@ -205,7 +197,7 @@ app.get("/api/"+API_VERSION+"/marketing/hots", function(req, res){
 	});
 });
 // Product API
-app.get("/api/"+API_VERSION+"/products/details", function(req, res){
+app.get("/api/"+cst.API_VERSION+"/products/details", function(req, res){
 	let productId=parseInt(req.query.id);
 	if(!Number.isInteger(productId)){
 		res.send({error:"Wrong Request"});
@@ -228,12 +220,12 @@ app.get("/api/"+API_VERSION+"/products/details", function(req, res){
 						product.colors=[];
 						product.sizes=[];
 						product.variants=[];
-						product.main_image=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/main.jpg";
+						product.main_image=cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/main.jpg";
 						product.images=[
-							PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
-							PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg",
-							PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
-							PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg"
+							cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/0.jpg",
+							cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/1.jpg",
+							cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/0.jpg",
+							cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/1.jpg"
 						];
 						let variant;
 						for(let i=0;i<results.length;i++){
@@ -261,7 +253,7 @@ app.get("/api/"+API_VERSION+"/products/details", function(req, res){
 		}
 	});
 });
-app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
+app.get("/api/"+cst.API_VERSION+"/products/:category", function(req, res){
 	let paging=parseInt(req.query.paging);
 	if(!Number.isInteger(paging)){
 		paging=0;
@@ -339,12 +331,12 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 										product.colors=[];
 										product.sizes=[];
 										product.variants=[];
-										product.main_image=PROTOCOL+HOST_NAME+"/assets/"+product.id+"/main.jpg";
+										product.main_image=cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/main.jpg";
 										product.images=[
-											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
-											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg",
-											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/0.jpg",
-											PROTOCOL+HOST_NAME+"/assets/"+product.id+"/1.jpg"
+											cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/0.jpg",
+											cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/1.jpg",
+											cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/0.jpg",
+											cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/1.jpg"
 										];
 									});
 									let product, variant;
@@ -380,7 +372,7 @@ app.get("/api/"+API_VERSION+"/products/:category", function(req, res){
 		});
 	}
 // User API
-app.post("/api/"+API_VERSION+"/user/signup", function(req, res){
+app.post("/api/"+cst.API_VERSION+"/user/signup", function(req, res){
 	let data=req.body;
 	if(!data.name||!data.email||!data.password){
 		res.send({error:"Request Error: name, email and password are required."});
@@ -447,7 +439,7 @@ app.post("/api/"+API_VERSION+"/user/signup", function(req, res){
 		});
 	});
 });
-app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
+app.post("/api/"+cst.API_VERSION+"/user/signin", function(req, res){
 	let data=req.body;
 	if(data.provider==="native"){
 		if(!data.email||!data.password){
@@ -617,7 +609,7 @@ app.post("/api/"+API_VERSION+"/user/signin", function(req, res){
 			});
 		});
 	};
-app.get("/api/"+API_VERSION+"/user/profile", function(req, res){
+app.get("/api/"+cst.API_VERSION+"/user/profile", function(req, res){
 	let accessToken=req.get("Authorization");
 	if(accessToken){
 		accessToken=accessToken.replace("Bearer ", "");
@@ -644,7 +636,7 @@ app.get("/api/"+API_VERSION+"/user/profile", function(req, res){
 	});
 });
 // Check Out API
-app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
+app.post("/api/"+cst.API_VERSION+"/order/checkout", function(req, res){
 	let data=req.body;
 	if(!data.order||!data.order.total||!data.order.list||!data.prime){
 		res.send({error:"Create Order Error: Wrong Data Format"});
@@ -680,11 +672,11 @@ app.post("/api/"+API_VERSION+"/order/checkout", function(req, res){
 					method:"POST",
 					headers:{
 						"Content-Type":"application/json",
-						"x-api-key":TAPPAY_PARTNER_KEY
+						"x-api-key":cst.TAPPAY_PARTNER_KEY
 					},
 					json:{
 						"prime": data.prime,
-						"partner_key": TAPPAY_PARTNER_KEY,
+						"partner_key": cst.TAPPAY_PARTNER_KEY,
 						"merchant_id": "AppWorksSchool_CTBC",
 						"details": "Stylish Payment",
 						"amount": data.order.total,
