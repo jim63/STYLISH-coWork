@@ -67,5 +67,58 @@ module.exports={
 				});
 			});
 		});
+	},
+	get:function(productId){
+		return new Promise(function(resolve, reject){
+			let query="select * from product where id = ?";
+			mysql.con.query(query, [productId], function(error, results, fields){
+				if(error){
+					reject("Database Query Error");
+				}else{
+					if(results.length===0){
+						resolve(null);
+					}else{
+						let product=results[0];
+						query="select * from variant where product_id = ?";
+						mysql.con.query(query, [product.id], function(error, results, fields){
+							if(error){
+								reject("Database Query Error");
+							}else{
+								product.colors=[];
+								product.sizes=[];
+								product.variants=[];
+								product.main_image=cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/main.jpg";
+								product.images=[
+									cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/0.jpg",
+									cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/1.jpg",
+									cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/0.jpg",
+									cst.PROTOCOL+cst.HOST_NAME+"/assets/"+product.id+"/1.jpg"
+								];
+								let variant;
+								for(let i=0;i<results.length;i++){
+									variant=results[i];
+									if(product.colors.findIndex((color)=>{
+										return color.code===variant.color_code
+									})===-1){
+										product.colors.push({
+											code:variant.color_code, name:variant.color_name
+										});
+									}
+									if(product.sizes.indexOf(variant.size)===-1){
+										product.sizes.push(variant.size);
+									}
+									product.variants.push({
+										color_code:variant.color_code,
+										size:variant.size,
+										stock:variant.stock
+									});
+								}
+								resolve(product);
+							}
+						});
+					}
+				}
+			});
+		});
 	}
 };
