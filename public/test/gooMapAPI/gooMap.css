@@ -1,0 +1,74 @@
+@import "common.css";
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --base: #8b572a;
+  --color: white;
+}
+
+.branchInfo {
+  width: 90vw;
+  min-width: 360px;
+  max-width: 600px;
+  padding: 10px;
+  margin: 20px auto;
+}
+
+.branchInfoEach {
+  margin: 20px auto;
+}
+
+.branchInfoEachMap {
+  width: 100%;
+  height: 52.5vw;
+  max-height: 400px;
+  border: 1px solid #ccc;
+}
+
+.branchInfoRachWord {
+  margin-top: 10px;
+}
+
+.branchInfoEach {
+  font-size: 14px;
+}
+
+.storeName {
+  background-color: var(--base);
+  line-height: 40px;
+  font-size: 20px;
+  color: white;
+  letter-spacing: 3px;
+}
+
+@media screen and (min-width: 1000px) {
+  .branchInfo {
+    width: 80vw;
+    max-width: 1200px;
+  }
+  .branchInfoEach {
+    margin: 30px auto;
+    display: flex;
+    justify-content: space-between;
+  }
+  .branchInfoEachMap {
+    width: 32vw;
+    max-width: 400px;
+    height: 24vw;
+    max-height: 200px;
+  }
+  .branchInfoRachWord {
+    width: 50vw;
+    max-width: 700px;
+    margin-left: 20px;
+    margin-top: 0px;
+    line-height: 40px;
+  }
+
+  .storeName {
+    padding-left: 20px;
+  }
+}

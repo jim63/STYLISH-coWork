@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <style></style>
+  </head>
+  <body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-twzipcode@1.7.14/jquery.twzipcode.min.js"></script>
+
+    <!-- Normal -->
+    <div id="twzipcode"></div>
+
+    <!-- OR HTML5 data-* (Version 1.5+) -->
+
+    <div id="twzipcode">
+      <div data-role="county" data-style="Style Name" data-value="110"></div>
+      <div
+        data-role="district"
+        data-style="Style Name"
+        data-value="臺北市"
+      ></div>
+      <div
+        data-role="zipcode"
+        data-style="Style Name"
+        data-value="信義區"
+      ></div>
+    </div>
+    <script>
+      $("#twzipcode").twzipcode();
+    </script>
+    <input type="button" value="search" onclick="app.searchStories()" />
+    <div
+      class="choosedStore"
+      style="border:2px solid red;padding:10px;margin-bottom: 20px;margin-top: 20px;"
+    >
+      <p>店號：<span id="storeNumber"></span></p>
+      <p>店名：<span id="storeName"></span></p>
+      <p>地址：<span id="storeAddress"></span></p>
+    </div>
+    <div style="border:2px solid black;padding:20px;" id="displayStories"></div>
+    <script>
+      const app = {};
+      app.searchStories = function() {
+        let zipCode = document.querySelector('input[name="zipcode"]').value;
+        fetch(`/getStories?zipcode=${zipCode}`)
+          .then(function(response) {
+            return response.json();
+          })
+          .then(function(myJson) {
+            console.log(myJson);
+            // console.log(myJson.data.split("table")[0]);
+            // console.log(myJson.data.split("table")[1]);
+            // console.log(myJson.data.split("table")[2]);
+            let responseStories =
+              myJson.data.split("table")[0] +
+              "table" +
+              myJson.data.split("table")[1] +
+              "table>";
+
+            let displayStories = document.querySelector("#displayStories");
+            displayStories.innerHTML = responseStories;
+            // console.log(responseStories);
+          });
+      };
+    </script>
+    <script>
+      document.addEventListener("click", e => {
+        let parentNode = e.target.parentElement;
+        if (parentNode.tagName.toUpperCase() === "TR") {
+          let body = document.querySelector("body");
+          console.log("店號", parentNode.children[0].innerText);
+          console.log("店名", parentNode.children[1].innerText);
+          console.log("地址", parentNode.children[2].innerText);
+
+          let storeNumber = parentNode.children[0].innerText;
+          let storeName = parentNode.children[1].innerText;
+          let storeAddress = parentNode.children[2].innerText;
+
+          document.querySelector("#storeNumber").innerHTML = storeNumber;
+          document.querySelector("#storeName").innerHTML = storeName;
+          document.querySelector("#storeAddress").innerHTML = storeAddress;
+        }
+      });
+    </script>
+  </body>
+</html>
